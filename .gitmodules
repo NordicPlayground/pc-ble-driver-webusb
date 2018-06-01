@@ -1,0 +1,5 @@
+[submodule "pc-ble-driver"]
+	path = pc-ble-driver
+	url = https://github.com/NordicSemiconductor/pc-ble-driver
+
+	branch = release/v2.3.1
