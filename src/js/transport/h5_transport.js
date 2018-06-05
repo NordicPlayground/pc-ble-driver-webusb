@@ -106,8 +106,8 @@ class H5Transport extends Transport {
             };
 
             const timeoutFunc = () => {
-                if (remainingRetransmissions <= 0) {
-                    remainingRetransmissions -= 1;
+                remainingRetransmissions -= 1;
+                if (remainingRetransmissions < 0) {
                     removeEventListener('packetAckWait', packetAckFunc);
                     clearInterval(timeout);
                     resolve(NRF_ERROR_TIMEOUT);
