@@ -1,73 +1,61 @@
-//const Transport = require('./transport');
+class WebusbInterface extends Transport {
 
-//const NRF_SUCCESS = 0;
-
-class WebusbInterface extends Transport{
-
-    constructor(self){
+    constructor() {
         super();
-        this.self = self;
         this.device = null;
     }
-    open(status_callback, data_callback, log_callback){
-        super.open(status_callback, data_callback, log_callback);
+    open(statusCallback, dataCallback, logCallback) {
+        super.open(statusCallback, dataCallback, logCallback);
 
-
-
-        //let device;
         return new Promise(resolve => {
-
             serial.requestPort().then(selectedPort => {
-            this.port = selectedPort;
-            this.webusbConnect(resolve);
-        }).catch(error => {
-          console.log("Could not connect to webusb")
+                this.port = selectedPort;
+                this.webusbConnect(resolve);
+            }).catch(error => {
+                this.log(`Could not connect to webusb: ${error}`);
+            });
         });
-
-    });
-
     }
 
-
     webusbConnect(resolve) {
-        console.log("Web usb is connecting..")
+        this.log('Web usb is connecting..')
         this.port.onReceiveError = error => {
             console.error(error);
         };
         this.port.connect().then(() => {
+            this.port.onReceive = this.dataReceived.bind(this);
+            this.port.onReceiveError = error => {
+                console.error(error);
+                this.statusCallback(sd_rpc_app_status_t.IO_RESOURCES_UNAVAILABLE, 'Lost connection to webusb device.');
+            };
 
-        this.port.onReceive = this.dataReceived.bind(this);
-        this.port.onReceiveError = error => {
-            console.error(error);
-            this.statusCallback(sd_rpc_app_status_t.IO_RESOURCES_UNAVAILABLE, "Lost connection to webusb device.");
-        };
-        //this.send(new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]));
-
-        resolve(NRF_SUCCESS); // Connected!
+            resolve(NRF_SUCCESS); // Connected!
         }, error => {
-            console.log(error)
+            this.log(error)
         });
     }
 
-    async close(){
-        return await this.port.disconnect();
+    async close() {
+        return this.port.disconnect();
     }
 
-    dataReceived(data){
-
-
-        data = new Uint8Array(data.buffer);
-        this.dataCallback(data,data.length);
+    dataReceived(data) {
+        const rcvData = new Uint8Array(data.buffer);
+        this.dataCallback(rcvData, rcvData.length);
     }
-    send(data){
-        //console.log("Webusb sending data.. ")
-        //console.log(data)
-        if(!this.port) {
+
+    send(data) {
+        if (!this.port) {
             return;
         }
         this.port.send(data);
     }
 
+    log(message) {
+        if (this.logCallback) {
+            this.logCallback(sd_rpc_log_severity_t.SD_RPC_LOG_DEBUG, message);
+        } else {
+            console.log(`Log: ${message}`);
+        }
+    }
 }
-
-//module.exports = WebusbInterface;

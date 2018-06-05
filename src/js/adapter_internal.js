@@ -1,60 +1,48 @@
-const NRF_SUCCESS = 0;
-const NRF_ERROR_INTERNAL = 3;
-const NRF_ERROR_TIMEOUT = 13;
-const NRF_ERROR_INVALID_DATA = 11;
-
-
-
 class AdapterInternal {
-    constructor(self, serializationTransport) {
-        this.self = self;
+    constructor(serializationTransport) {
         this.eventCallback = null;
         this.statusCallback = null;
         this.logCallback = null;
-        this.logseverityfilter = 0
+        this.logseverityfilter = 0;
         this.transport = serializationTransport;
     }
 
-    statusHandler(code, message){
+    statusHandler(code, message) {
+        this.statusCallback(this, code, message);
     }
-    eventHandler(event){
+    eventHandler(event) {
         this.eventCallback(this, event, event.length);
     }
-    logHandler(severity, log_message){
-        if(this.logseverityfilter <= severity) {
-            this.logCallback(this, severity, log_message);
+    logHandler(severity, logMessage) {
+        if (this.logseverityfilter <= severity) {
+            this.logCallback(this, severity, logMessage);
         }
     }
 
-    async open(status_callback, event_callback, log_callback) {
+    async open(statusCallback, eventCallback, logCallback) {
+        this.eventCallback = eventCallback;
+        this.statusCallback = statusCallback;
+        this.logCallback = logCallback;
 
-        this.eventCallback = event_callback;
-        this.statusCallback = status_callback;
-        this.logCallback = log_callback;
-
-        var boundStatusHandler = this.statusHandler.bind(this);
-        var boundEventHandler = this.eventHandler.bind(this);
-        var boundLogHandler = this.logHandler.bind(this);
-        var res = await this.transport.open(boundStatusHandler, boundEventHandler, boundLogHandler);
+        const boundStatusHandler = this.statusHandler.bind(this);
+        const boundEventHandler = this.eventHandler.bind(this);
+        const boundLogHandler = this.logHandler.bind(this);
+        const res = await this.transport.open(boundStatusHandler, boundEventHandler, boundLogHandler);
         return res;
     }
-    isInternalError(error_code){
-        if(error_code !== NRF_SUCCESS){
+
+    isInternalError(errorCode) {
+        if (errorCode !== NRF_SUCCESS) {
             return true;
         }
-        else {
-            return false;
-        }
+        return false;
     }
-    logSeverityFilterSet(severity_filter){
-        this.logseverityfilter = severity_filter;
+    logSeverityFilterSet(severityFilter) {
+        this.logseverityfilter = severityFilter;
         return NRF_SUCCESS;
     }
 
     async close() {
-        return await this.transport.close();
+        return this.transport.close();
     }
-
-
-
 }

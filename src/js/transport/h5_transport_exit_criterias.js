@@ -1,82 +1,78 @@
-class ExitCriterias{
+class ExitCriterias {
     constructor() {
         this.ioResourceError = false;
         this.close = false;
     }
 
-    isFullfilled() {
-        return false;
-    }
-
-    reset(){
+    reset() {
         this.ioResourceError = false;
         this.close = false;
     }
 }
 
-class StartExitCriterias extends ExitCriterias{
-    constructor(){
-            super();
-            this.isOpened = false;
-        }
+class StartExitCriterias extends ExitCriterias {
+    constructor() {
+        super();
+        this.isOpened = false;
+    }
 
-    isFullfilled(){
+    isFullfilled() {
         return (this.isOpened || this.ioResourceError);
     }
 
-    reset(){
+    reset() {
         super.reset();
         this.isOpened = false;
     }
 }
 
-class UninitializedExitCriterias extends ExitCriterias{
-    constructor(){
+class UninitializedExitCriterias extends ExitCriterias {
+    constructor() {
         super();
         this.syncSent = false;
         this.syncRspReceived = false;
     }
 
-    isFullfilled(){
+    isFullfilled() {
         return (this.syncSent && this.syncRspReceived) || this.ioResourceError || this.close;
     }
 
-    reset(){
+    reset() {
         super.reset();
         this.syncSent = false;
         this.syncRspReceived = false;
     }
 }
 
-class InitializedExitCriterias extends ExitCriterias{
-    constructor(){
+class InitializedExitCriterias extends ExitCriterias {
+    constructor() {
         super();
         this.syncConfigSent = false;
         this.syncConfigRspReceived = false;
-        }
+    }
 
-    isFullfilled(){
+    isFullfilled() {
         return this.ioResourceError || this.close || (this.syncConfigSent && this.syncConfigRspReceived);
     }
 
-    reset(){
+    reset() {
         super.reset();
         this.syncConfigSent = false;
         this.syncConfigRspReceived = false;
     }
 }
 
-class ActiveExitCriterias extends ExitCriterias{
-    constructor(){
+class ActiveExitCriterias extends ExitCriterias {
+    constructor() {
         super();
         this.irrecoverableSyncError = false;
         this.syncReceived = false;
-        }
+    }
 
-    isFullfilled(){
+    isFullfilled() {
         return this.ioResourceError || this.syncReceived || this.close || this.irrecoverableSyncError;
     }
-    reset(){
+    reset() {
         super.reset();
         this.irrecoverableSyncError = false;
         this.syncReceived = false;
@@ -84,28 +80,18 @@ class ActiveExitCriterias extends ExitCriterias{
     }
 }
 
-class ResetExitCriterias extends ExitCriterias{
-    constructor(){
+class ResetExitCriterias extends ExitCriterias {
+    constructor() {
         super();
         this.resetSent = false;
     }
 
-    isFullfilled(){
+    isFullfilled() {
         return this.ioResourceError || this.close || this.resetSent;
     }
 
-    reset(){
+    reset() {
         super.reset();
         this.resetSent = false;
     }
 }
-
-
-/*
-module.exports = {
-    StartExitCriterias: StartExitCriterias,
-    UninitializedExitCriterias: UninitializedExitCriterias,
-    InitializedExitCriterias: InitializedExitCriterias,
-    ActiveExitCriterias: ActiveExitCriterias,
-    ResetExitCriterias: ResetExitCriterias
-}*/
