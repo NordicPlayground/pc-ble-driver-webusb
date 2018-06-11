@@ -47,7 +47,7 @@ async function encode_decode(adapter, encodeFunction, decodeFunction) {
     Module._free(txBufferLength);
 
     if (adapter.isInternalError(errCode)) {
-        const errorMessage = `Error sending packet to target. Code #${err_code}`;
+        const errorMessage = `Error sending packet to target. Code #${errCode}`;
         console.log(errorMessage);
         adapter.statusHandler(sd_rpc_app_status_t.PKT_SEND_ERROR, errorMessage);
         Module._free(rxBuffer);
@@ -70,10 +70,9 @@ async function encode_decode(adapter, encodeFunction, decodeFunction) {
     Module._free(rxBufferLength);
 
     if (adapter.isInternalError(errCode)) {
-        const errorMessage = `Not able to decode packet. Code #${err_code}`;
+        const errorMessage = `Not able to decode packet. Code #${errCode}`;
         adapter.statusHandler(sd_rpc_app_status_t.PKT_DECODE_ERROR, errorMessage);
         return NRF_ERROR_INTERNAL;
     }
-
     return resultCodeValue;
 }

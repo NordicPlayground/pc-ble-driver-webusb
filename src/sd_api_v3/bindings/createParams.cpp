@@ -170,3 +170,33 @@ extern "C" {
 
     }
 }
+enum
+{
+    UNIT_0_625_MS = 625,  /**< Number of microseconds in 0.625 milliseconds. */
+    UNIT_1_25_MS  = 1250, /**< Number of microseconds in 1.25 milliseconds. */
+    UNIT_10_MS    = 10000 /**< Number of microseconds in 10 milliseconds. */
+};
+#define MSEC_TO_UNITS(TIME, RESOLUTION) (((TIME) * 1000) / (RESOLUTION))
+
+#define MIN_CONNECTION_INTERVAL         MSEC_TO_UNITS(7.5, UNIT_1_25_MS) /**< Determines minimum connection interval in milliseconds. */
+#define MAX_CONNECTION_INTERVAL         MSEC_TO_UNITS(7.5, UNIT_1_25_MS) /**< Determines maximum connection interval in milliseconds. */
+#define SLAVE_LATENCY                   0                                /**< Slave Latency in number of connection events. */
+#define CONNECTION_SUPERVISION_TIMEOUT  MSEC_TO_UNITS(4000, UNIT_10_MS)  /**< Determines supervision time-out in units of 10 milliseconds. */
+
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    ble_gap_conn_params_t * createConnectionParams()
+    {
+        ble_gap_conn_params_t *m_connection_param = new ble_gap_conn_params_t(
+        {
+            (uint16_t)MIN_CONNECTION_INTERVAL,
+            (uint16_t)MAX_CONNECTION_INTERVAL,
+            (uint16_t)SLAVE_LATENCY,
+            (uint16_t)CONNECTION_SUPERVISION_TIMEOUT
+        });
+        return m_connection_param;
+
+    }
+}
+
+

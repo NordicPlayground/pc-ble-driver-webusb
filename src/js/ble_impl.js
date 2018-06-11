@@ -37,3 +37,16 @@ async function sd_ble_gap_scan_start(adapter, scanParam) {
 
     return await encode_decode(adapter, encode_function, decode_function);
 }
+
+async function sd_ble_gap_connect(adapter, pAddr, pScanParams, pConnParams) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_gap_connect_req_enc(pAddr, pScanParams, pConnParams, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+      return emscriptenBindings.ble_gap_connect_rsp_dec(buffer, length, result);
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}

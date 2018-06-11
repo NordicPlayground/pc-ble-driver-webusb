@@ -1,20 +1,94 @@
+let currentAdapter = null;
+
 function statusCallback(adapter, code, message) {
     console.log(code, message);
 }
 function logCallback(adapter, severity, message) {
     console.log(message);
 }
-function dataCallback(adapter, data, length) {
-    const arr = new Uint8Array(Module.HEAPU8.buffer.slice(data, data + length));
 
-    let evt_id_data = new Uint16Array(arr.slice(0, 2));
-    let evt_len_data = new Uint16Array(arr.slice(2, 4));
-    let advPtr = Module.ccall('getAdvName', 'number', ['number'], [data]);
-    if (advPtr === 0) {
-        // console.log('Error decoding adv name');
+function advReportParse(type, advdata, typedata) {
+    let index = 0;
+
+    const data = new DataView(Module.HEAPU8.buffer, advdata.p_data, advdata.data_len);
+    while (index < advdata.data_len) {
+        const fieldLength = data.getUint8(index);
+        const fieldType = data.getUint8(index + 1);
+
+        if (fieldType === type) {
+            typedata.p_data = advdata.p_data + index + 2;
+            typedata.data_length = fieldLength - 1;
+            return 0;
+        }
+        index += fieldLength + 1;
+    }
+    return -1;
+}
+
+function getAdvName(data) {
+    const advdata = {};
+    const typedata = {};
+    advdata.p_data = ble_event_struct['ble_evt_t.evt.gap_evt.params.adv_report.data'](data);
+    advdata.data_len = ble_event_struct['ble_evt_t.evt.gap_evt.params.adv_report.dlen'](data);
+
+    let errorCode = advReportParse(0x09, advdata, typedata);
+    if (errorCode === 0) {
+        const nameData = new Uint8Array(Module.HEAPU8.buffer.slice(typedata.p_data, typedata.p_data + typedata.data_length));
+        return String.fromCharCode.apply(null, nameData);
     } else {
-        const retstr = Module.Pointer_stringify(advPtr);
-        console.log(retstr);
+        errorCode = advReportParse(0x08, advdata, typedata);
+        if (errorCode !== 0) {
+            return 0;
+        }
+        const nameData = new Uint8Array(Module.HEAPU8.buffer.slice(typedata.p_data, typedata.p_data + typedata.data_length));
+        return String.fromCharCode.apply(null, nameData);
+    }
+
+}
+
+async function onAdvReport(data) {
+    const advName = getAdvName(data);
+    if (advName === 0){
+      return;
+    }
+    //Galaxy S8
+    if(advName == "Galaxy S8"){
+      console.log("Connecting to "+advName);
+      const scanParam = Module.ccall('createScanParam', 'number', [], []);
+      const connParam = Module.ccall('createConnectionParams', 'number', [], []);
+      //console.log(connParam)
+      let peerAddr = ble_event_struct['ble_evt_t.evt.gap_evt.params.adv_report.peer_addr'](data);
+      console.log(peerAddr)
+      const apiRes = await sd_ble_gap_connect(currentAdapter, peerAddr, scanParam, connParam);
+      Module._free(scanParam);
+      Module._free(connParam);
+      if (apiRes === 0) {
+          console.log("Connected to "+advName);
+      } else {
+        console.log("Connection failed..")
+        console.log(apiRes);
+      }
+
+    }
+    else {
+      console.log("Did not connect to "+advName);
+    }
+}
+
+function dataCallback(adapter, data, length) {
+    //const arr = new Uint8Array(Module.HEAPU8.buffer.slice(data, data + length));
+
+    let ble_evt_id = ble_event_struct['ble_evt_t.header.evt_id'](data);
+    let ble_evt_len = ble_event_struct['ble_evt_t.header.evt_len'](data);
+
+    switch(ble_evt_id) {
+        case 29: // BLE_GAP_EVT_ADV_REPORT
+            onAdvReport(data);
+    }
+
+    let advnam = getAdvName(data);
+    if(advnam !== 0) {
+      //console.log(advnam);
     }
 }
 
@@ -74,7 +148,9 @@ async function openAdapter() {
 }
 
 async function exampleProgram() {
+
     const adapter = await openAdapter();
+    currentAdapter = adapter;
     await bleStackInit(adapter);
     await scanStart(adapter);
 }
