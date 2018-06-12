@@ -200,3 +200,48 @@ extern "C" {
 }
 
 
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    ble_gatts_char_md_t * createCharMd(ble_gatts_attr_md_t * cccd_md)
+    {
+        ble_gatts_char_md_t* char_md = new ble_gatts_char_md_t;
+        memset(char_md, 0, sizeof(ble_gatts_char_md_t));
+        char_md->char_props.notify = 1;
+        char_md->p_char_user_desc  = NULL;
+        char_md->p_char_pf         = NULL;
+        char_md->p_user_desc_md    = NULL;
+        char_md->p_cccd_md         = cccd_md;
+        char_md->p_sccd_md         = NULL;
+
+        return char_md;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    ble_gatts_attr_t * createAttCharValue(ble_uuid_t* ble_uuid, ble_gatts_attr_md_t* attr_md, uint16_t init_len, uint16_t init_offs, uint16_t max_len, uint8_t* p_value)
+    {
+        ble_gatts_attr_t* attr_char_value = new ble_gatts_attr_t;
+        memset(attr_char_value, 0, sizeof(ble_gatts_attr_t));
+        attr_char_value->p_uuid = ble_uuid;
+        attr_char_value->p_attr_md    = attr_md;
+        attr_char_value->init_len     = init_len;
+        attr_char_value->init_offs    = init_offs;
+        attr_char_value->max_len      = max_len;
+        attr_char_value->p_value      = p_value;
+        return attr_char_value;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    ble_gatts_attr_md_t * createGattsAttrMd(uint8_t vlen, uint8_t vloc, uint8_t rd_auth, uint8_t wr_auth)
+    {
+        ble_gatts_attr_md_t* md = new ble_gatts_attr_md_t;
+        memset(md, 0, sizeof(ble_gatts_attr_md_t));
+
+        BLE_GAP_CONN_SEC_MODE_SET_OPEN(&(md->read_perm));
+        BLE_GAP_CONN_SEC_MODE_SET_OPEN(&(md->write_perm));
+        md->vloc       = vloc;
+        md->rd_auth    = rd_auth;
+        md->wr_auth    = wr_auth;
+        md->vlen       = vlen;
+
+        return md;
+    }
+}

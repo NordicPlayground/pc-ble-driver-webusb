@@ -50,3 +50,33 @@ async function sd_ble_gap_connect(adapter, pAddr, pScanParams, pConnParams) {
 
     return await encode_decode(adapter, encode_function, decode_function);
 }
+
+async function sd_ble_gatts_characteristic_add(adapter, service_handle, p_char_md, p_attr_char_value, p_handles) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_gatts_characteristic_add_req_enc(service_handle, p_char_md, p_attr_char_value, p_handles, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+      let p_p_handle = Module._malloc(2); // Decoder requires a pointer to a value handle pointer.
+      Module.HEAPU8.set(new Uint16Array([p_handles]), p_p_handle);
+      let res = emscriptenBindings.ble_gatts_characteristic_add_rsp_dec(buffer, length, p_p_handle, result);
+      Module._free(p_p_handle);
+      return res;
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}
+
+async function sd_ble_gatts_service_add(adapter, type, p_uuid, p_handle) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_gatts_service_add_req_enc(type, p_uuid, p_handle, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+      return emscriptenBindings.ble_gatts_service_add_rsp_dec(buffer, length, p_handle, result);
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}
