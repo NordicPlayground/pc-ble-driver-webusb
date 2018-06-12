@@ -35,8 +35,8 @@ extern "C" {
             ble_enable_params->gatts_enable_params.attr_tab_size = BLE_GATTS_ATTR_TAB_SIZE_DEFAULT;
             ble_enable_params->gatts_enable_params.service_changed = false;
             ble_enable_params->gap_enable_params.periph_conn_count = 1;
-            ble_enable_params->gap_enable_params.central_conn_count = 0;
-            ble_enable_params->gap_enable_params.central_sec_count = 0;
+            ble_enable_params->gap_enable_params.central_conn_count = 1;
+            ble_enable_params->gap_enable_params.central_sec_count = 1;
             ble_enable_params->common_enable_params.p_conn_bw_counts = NULL;
             ble_enable_params->common_enable_params.vs_uuid_count = 1;
         #endif
