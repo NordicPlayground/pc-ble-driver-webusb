@@ -80,3 +80,72 @@ async function sd_ble_gatts_service_add(adapter, type, p_uuid, p_handle) {
 
     return await encode_decode(adapter, encode_function, decode_function);
 }
+
+async function sd_ble_gattc_primary_services_discover(adapter, conn_handle, start_handle, p_srvc_uuid) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_gattc_primary_services_discover_req_enc(conn_handle, start_handle, p_srvc_uuid, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+      return emscriptenBindings.ble_gattc_primary_services_discover_rsp_dec(buffer, length, result);
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}
+
+async function sd_ble_gattc_characteristics_discover(adapter, conn_handle, p_handle_range) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_gattc_characteristics_discover_req_enc(conn_handle, p_handle_range, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+      return emscriptenBindings.ble_gattc_characteristics_discover_rsp_dec(buffer, length, result);
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}
+
+async function sd_ble_gattc_write(adapter, conn_handle, p_write_params) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_gattc_write_req_enc(conn_handle, p_write_params, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+      return emscriptenBindings.ble_gattc_write_rsp_dec(buffer, length, result);
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}
+
+async function sd_ble_uuid_vs_add(adapter, p_vs_uuid, p_uuid_type) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_uuid_vs_add_req_enc(p_vs_uuid, p_uuid_type, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+        let tmpPP = Module._malloc(4);
+        Module.HEAPU8.set(new Uint8Array([p_uuid_type,0,0,0]), tmpPP);
+        let sdkRes =  emscriptenBindings.ble_uuid_vs_add_rsp_dec(buffer, length, tmpPP, result);
+        Module._free(tmpPP);
+        return sdkRes;
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}
+
+async function sd_ble_gattc_descriptors_discover(adapter, conn_handle, p_handle_range) {
+
+    function encode_function(buffer, length) {
+      return emscriptenBindings.ble_gattc_descriptors_discover_req_enc(conn_handle, p_handle_range, buffer, length);
+    };
+
+    function decode_function(buffer, length, result) {
+        return  emscriptenBindings.ble_gattc_descriptors_discover_rsp_dec(buffer, length, result);
+    };
+
+    return await encode_decode(adapter, encode_function, decode_function);
+}

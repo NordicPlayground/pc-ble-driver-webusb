@@ -1,5 +1,12 @@
 let currentAdapter = null;
 let serviceHandle = Module._malloc(2); // uint16 handle to service
+let serviceStartHandle = null;
+let serviceEndHandle = null;
+let ledCharacteristicHandle = null;
+let writeLEDHandle = null;
+let ledCharWriteHandle = null;
+
+let connectionHandle = 0;
 //let attributeHandle = new bleGattsCharHandles(); // uint16 handle to attribute
 
 function statusCallback(adapter, code, message) {
@@ -13,7 +20,7 @@ function advReportParse(type, advdata, typedata) {
     let index = 0;
 
     const data = new DataView(Module.HEAPU8.buffer, advdata.p_data, advdata.data_len);
-    while (index < advdata.data_len) {
+    while (index + 1  < advdata.data_len) {
         const fieldLength = data.getUint8(index);
         const fieldType = data.getUint8(index + 1);
 
@@ -48,13 +55,156 @@ function getAdvName(data) {
 
 }
 
+async function serviceDiscoveryStart() {
+
+    let startHandle = 0x01;
+    let srvcUUID = new bleUUIDt();
+    let uuid128 = new bleUUID128t(new Uint8Array([0xef, 0x68, 0x03, 0x00,   0x9b, 0x35,  0x49, 0x33,   0x9b, 0x10,   0x52, 0xff, 0xa9, 0x74, 0x00, 0x42]));
+    await uuid128.register();
+    uuid128.uuid.setType(2); // Temporary workaround!
+    srvcUUID.setType(1);
+    //srvcUUID.setUUID(0x0f18)
+    srvcUUID.setUUID(0x0f18)
+    console.log("Discovering services..")
+    let errorCode = await sd_ble_gattc_primary_services_discover(currentAdapter, connectionHandle, startHandle, uuid128.uuid.data/*srvcUUID.data*/);
+
+    if (errorCode !== NRF_SUCCESS) {
+        const errorMessage = `Could discover services. Code #${errorCode}`;
+        currentAdapter.statusHandler(sd_rpc_app_status_t.PKT_UNEXPECTED, errorMessage);
+    }
+    return errorCode;
+}
+
+async function descrDiscoveryStart() {
+    console.log("Discovering descriptors");
+    let handleRange = Module._malloc(4);
+    let dw = new DataView(Module.HEAPU8.buffer, handleRange, 4);
+    dw.setUint16(0, ledCharacteristicHandle, true);
+    dw.setUint16(2, serviceEndHandle, true);
+
+
+    let apiRes = await sd_ble_gattc_descriptors_discover(currentAdapter, connectionHandle, handleRange);
+    Module._free(handleRange);
+    return apiRes;
+}
+
+async function onConnected(data) {
+    console.log("Connected to device");
+    connectionHandle = ble_event_struct['ble_evt_t.evt.gap_evt.conn_handle'](data);
+    await serviceDiscoveryStart();
+}
+
+async function charDiscoveryStart() {
+    console.log("Discovering characteristics");
+    let handleRange = Module._malloc(4);
+    let dw = new DataView(Module.HEAPU8.buffer, handleRange, 4);
+    dw.setUint16(0, serviceStartHandle, true);
+    dw.setUint16(2, serviceEndHandle, true);
+
+    let apiRes = await sd_ble_gattc_characteristics_discover(currentAdapter, connectionHandle, handleRange);
+    Module._free(handleRange);
+    return apiRes;
+}
+
+async function onDescriptorDiscoveryResponse(data) {
+    let count = ble_event_struct['ble_evt_t.evt.gattc_evt.params.desc_disc_rsp.count'](data);
+    let errorCode = ble_event_struct['ble_evt_t.evt.gattc_evt.gatt_status'](data);
+    if (errorCode !== NRF_SUCCESS) {
+        console.log("Descriptor discovery failed: "+ errorCode);
+        return;
+    }
+    console.log("Number of descriptors found: "+count);
+    for (let i = 0; i < count; i += 1) {
+        let currentDesc = ble_event_struct['ble_evt_t.evt.gattc_evt.params.desc_disc_rsp.descs'](data, i);
+        let uuid = ble_event_struct['ble_gattc_desc_t.uuid.uuid'](currentDesc);
+        console.log("Descriptor uuid: "+uuid);
+        writeLEDHandle = ble_event_struct['ble_gattc_desc_t.handle'](currentDesc);
+        console.log("Write LED handle "+writeLEDHandle);
+        await writeLED();
+    }
+    while(count > 0 && ledCharacteristicHandle < serviceEndHandle) {
+        ledCharacteristicHandle += count;
+        await descrDiscoveryStart();
+    }
+
+}
+
+function onWriteResponse(data) {
+    let errorCode = ble_event_struct['ble_evt_t.evt.gattc_evt.gatt_status'](data);
+    if (errorCode !== NRF_SUCCESS) {
+        console.log("Faield write operation. Code: "+ errorCode);
+        return;
+    }
+    console.log("Wrote charactersitaic");
+}
+
+async function writeLED() {
+    console.log("writing to led..")
+    let data = new Uint8Array([0x01,0xFF,0xFF,0x00]);
+    let dataPtr = Module._malloc(4);
+    Module.HEAPU8.set(data, dataPtr);
+    let write_params = Module.ccall('createGattcWriteParams', 'number', ['number', 'number', 'number', 'number', 'number'], [ledCharWriteHandle,4,dataPtr,1,0]);
+    let apiRes = await sd_ble_gattc_write(currentAdapter, connectionHandle, write_params);
+    Module._free(write_params);
+    Module._free(dataPtr);
+    return apiRes;
+}
+
+function onServiceDiscoveryResponse(data) {
+    console.log("Received service discovery response");
+    let errorCode = ble_event_struct['ble_evt_t.evt.gattc_evt.gatt_status'](data);
+    if (errorCode !== NRF_SUCCESS) {
+        console.log("Service discovery failed. Code: "+errorCode);
+        return;
+    }
+    let count = ble_event_struct['ble_evt_t.evt.gattc_evt.params.prim_srvc_disc_rsp.count'](data);
+    console.log("Count "+count)
+
+
+    let service = ble_event_struct['ble_evt_t.evt.gattc_evt.params.prim_srvc_disc_rsp.services'](data); // Must fix binding generation to accept indices
+    console.log(ble_event_struct['ble_gattc_service_t.uuid.uuid'](service));
+
+    serviceStartHandle = ble_event_struct['ble_gattc_service_t.handle_range.start_handle'](service);
+    serviceEndHandle = ble_event_struct['ble_gattc_service_t.handle_range.end_handle'](service);
+    console.log("Start handle "+serviceStartHandle);
+    console.log("End handle "+serviceEndHandle);
+    charDiscoveryStart(service);
+}
+
+function onCharacteristicDiscoveryResponse(data) {
+    let count = ble_event_struct['ble_evt_t.evt.gattc_evt.params.char_disc_rsp.count'](data);
+    console.log(count + " characteristics found..")
+    let errorCode = ble_event_struct['ble_evt_t.evt.gattc_evt.gatt_status'](data);
+
+    if (errorCode != NRF_SUCCESS) {
+        console.log("Characteristic discovery failed. Error code "+errorCode);
+        return;
+    }
+    for(let i = 0 ; i < count; i += 1) {
+        let characteristic0 = ble_event_struct['ble_evt_t.evt.gattc_evt.params.char_disc_rsp.chars'](data, i);
+        let uuid = ble_event_struct['ble_gattc_char_t.uuid.uuid'](characteristic0);
+        console.log("Characteristic uuid "+uuid);
+        if (uuid === 769) {
+            ledCharacteristicHandle = ble_event_struct['ble_gattc_char_t.handle_decl'](characteristic0);
+            ledCharWriteHandle = ble_event_struct['ble_gattc_char_t.handle_value'](characteristic0);
+            return descrDiscoveryStart();
+        }
+    }
+
+    if (count > 0) {
+        serviceStartHandle += count;
+        charDiscoveryStart();
+    }
+
+}
+
 async function onAdvReport(data) {
     const advName = getAdvName(data);
     if (advName === 0) {
       return;
     }
     //Galaxy S8
-    if(advName == "Galaxy S8"){
+    if(advName === "Mathias "){
       console.log("Connecting to "+advName);
       const scanParam = Module.ccall('createScanParam', 'number', [], []);
       const connParam = Module.ccall('createConnectionParams', 'number', [], []);
@@ -63,10 +213,10 @@ async function onAdvReport(data) {
       Module._free(scanParam);
       Module._free(connParam);
       if (apiRes === 0) {
-          console.log("Connected to "+advName);
+          //console.log("Connected to "+advName);
       } else {
-        console.log("Connection failed..")
-        console.log(apiRes);
+        //console.log("Connection failed..")
+        //console.log(apiRes);
       }
 
     }
@@ -108,16 +258,32 @@ function dataCallback(adapter, data, length) {
 
     let ble_evt_id = ble_event_struct['ble_evt_t.header.evt_id'](data);
     let ble_evt_len = ble_event_struct['ble_evt_t.header.evt_len'](data);
-    //console.log(ble_evt_id)
+    console.log(ble_evt_id)
+
     switch(ble_evt_id) {
+        case 16: // BLE_GAP_EVT_CONNECTED
+          onConnected();
+          break;
+
         case 29: // BLE_GAP_EVT_ADV_REPORT
             onAdvReport(data);
+            break;
+        case 48: //BLE_GATTC_EVT_PRIM_SRVC_DISC_RSP
+            onServiceDiscoveryResponse(data);
+            break;
+        case 50: // BLE_GATTC_EVT_CHAR_DISC_RSP
+            onCharacteristicDiscoveryResponse(data);
+            break;
+        case 51: // BLE_GATTC_EVT_DESC_DISC_RSP:
+            onDescriptorDiscoveryResponse(data);
+            break;
+        case 56: //BLE_GATTC_EVT_WRITE_RSP
+            onWriteResponse(data);
+            break;
+        default:
+            break;
     }
 
-    let advnam = getAdvName(data);
-    if(advnam !== 0) {
-      //console.log(advnam);
-    }
 }
 
 async function advertisementDataSet(adapter) {

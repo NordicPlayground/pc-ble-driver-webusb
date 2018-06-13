@@ -78,7 +78,26 @@ class bleUUIDt {
 }
 
 class bleUUID128t {
-    constructor() {
+    constructor(bytes) {
+        let bytesLE = new Uint8Array(bytes).reverse();
+        this.buffer = Module._malloc(16);
+        Module.HEAPU8.set(bytesLE, this.buffer);
+        this.uuid = new bleUUIDt();
+        this.uuid.setUUID(new DataView(bytesLE.buffer, 12, 2).getUint16(0))
 
+    }
+    async register() {
+
+        let errorCode = await sd_ble_uuid_vs_add(currentAdapter, this.buffer, this.uuid.data + 2);
+        if (errorCode !== NRF_SUCCESS) {
+            console.log("Could not add 128 bit characteristic")
+        } else {
+            console.log("UUID register successful!")
+            console.log(this.uuid.getUUID());
+            console.log(this.uuid.getType());
+        }
+    }
+    clean() {
+        Module._free(this.buffer);
     }
 }
