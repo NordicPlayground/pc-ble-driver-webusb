@@ -21,6 +21,7 @@ class WebusbInterface extends Transport {
         this.log('Web usb is connecting..')
         this.port.onReceiveError = error => {
             console.error(error);
+            resolve(NRF_ERROR_INTERNAL);
         };
         this.port.connect().then(() => {
             this.port.onReceive = this.dataReceived.bind(this);
@@ -32,6 +33,7 @@ class WebusbInterface extends Transport {
             resolve(NRF_SUCCESS); // Connected!
         }, error => {
             this.log(error)
+            resolve(NRF_ERROR_INTERNAL);
         });
     }
 
