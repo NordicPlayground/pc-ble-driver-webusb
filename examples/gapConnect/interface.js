@@ -1,13 +1,7 @@
 let currentAdapter = null;
-let serviceHandle = Module._malloc(2); // uint16 handle to service
-let serviceStartHandle = null;
-let serviceEndHandle = null;
-let ledCharacteristicHandle = null;
-let writeLEDHandle = null;
-let ledCharWriteHandle = null;
+let serviceHandle = Module._malloc(2); // uint16 handle to services
 
 let connectionHandle = 0;
-//let attributeHandle = new bleGattsCharHandles(); // uint16 handle to attribute
 
 function statusCallback(adapter, code, message) {
     console.log(code, message);
@@ -75,15 +69,17 @@ async function serviceDiscoveryStart() {
     return errorCode;
 }
 
-async function descrDiscoveryStart() {
+async function descrDiscoveryStart(characteristic) {
+    if (characteristic.startHandleRange >= characteristic.endHandleRange) {
+        return 0;
+    }
     console.log("Discovering descriptors");
     let handleRange = Module._malloc(4);
     let dw = new DataView(Module.HEAPU8.buffer, handleRange, 4);
-    dw.setUint16(0, ledCharacteristicHandle, true);
-    dw.setUint16(2, serviceEndHandle, true);
+    dw.setUint16(0, characteristic.startHandleRange, true);
+    dw.setUint16(2, characteristic.endHandleRange, true);
 
-
-    let apiRes = await sd_ble_gattc_descriptors_discover(currentAdapter, connectionHandle, handleRange);
+    let apiRes = await sd_ble_gattc_descriptors_discover(characteristic.adapter, characteristic.connection, handleRange);
     Module._free(handleRange);
     return apiRes;
 }
@@ -94,13 +90,12 @@ async function onConnected(data) {
     await serviceDiscoveryStart();
 }
 
-async function charDiscoveryStart() {
+async function charDiscoveryStart(gattcService) {
     console.log("Discovering characteristics");
     let handleRange = Module._malloc(4);
     let dw = new DataView(Module.HEAPU8.buffer, handleRange, 4);
-    dw.setUint16(0, serviceStartHandle, true);
-    dw.setUint16(2, serviceEndHandle, true);
-
+    dw.setUint16(0, gattcService.serviceStartHandle, true);
+    dw.setUint16(2, gattcService.serviceEndHandle, true);
     let apiRes = await sd_ble_gattc_characteristics_discover(currentAdapter, connectionHandle, handleRange);
     Module._free(handleRange);
     return apiRes;
@@ -114,17 +109,20 @@ async function onDescriptorDiscoveryResponse(data) {
         return;
     }
     console.log("Number of descriptors found: "+count);
+    let handleInRange = null;
     for (let i = 0; i < count; i += 1) {
         let currentDesc = ble_event_struct['ble_evt_t.evt.gattc_evt.params.desc_disc_rsp.descs'](data, i);
         let uuid = ble_event_struct['ble_gattc_desc_t.uuid.uuid'](currentDesc);
-        console.log("Descriptor uuid: "+uuid);
-        writeLEDHandle = ble_event_struct['ble_gattc_desc_t.handle'](currentDesc);
-        console.log("Write LED handle "+writeLEDHandle);
-        await writeLED();
+        let descHandle = ble_event_struct['ble_gattc_desc_t.handle'](currentDesc);
+        handleInRange = descHandle;
+        let char = descriptorHandleToCharacteristic[descHandle];
+        let desc = new GattcDescriptor(uuid, descHandle); // Add something more?
+        char.addDescriptor(uuid, desc);
     }
-    while(count > 0 && ledCharacteristicHandle < serviceEndHandle) {
-        ledCharacteristicHandle += count;
-        await descrDiscoveryStart();
+    if (count > 0 && handleInRange !== null) {
+        let char = descriptorHandleToCharacteristic[handleInRange];
+        char.incrementStartHandle(count);
+        await descrDiscoveryStart(char);
     }
 
 }
@@ -135,15 +133,16 @@ function onWriteResponse(data) {
         console.log("Faield write operation. Code: "+ errorCode);
         return;
     }
-    console.log("Wrote charactersitaic");
 }
 
-async function writeLED() {
-    console.log("writing to led..")
-    let data = new Uint8Array([0x01,0xFF,0xFF,0x00]);
+async function writeLED(data) {
+    if (ledCharWriteHandle === null || currentAdapter === null) {
+        return;
+    }
+
     let dataPtr = Module._malloc(4);
     Module.HEAPU8.set(data, dataPtr);
-    let write_params = Module.ccall('createGattcWriteParams', 'number', ['number', 'number', 'number', 'number', 'number'], [ledCharWriteHandle,4,dataPtr,1,0]);
+    let write_params = Module.ccall('createGattcWriteParams', 'number', ['number', 'number', 'number', 'number', 'number'], [ledCharWriteHandle,data.length,dataPtr,1,0]);
     let apiRes = await sd_ble_gattc_write(currentAdapter, connectionHandle, write_params);
     Module._free(write_params);
     Module._free(dataPtr);
@@ -160,40 +159,52 @@ function onServiceDiscoveryResponse(data) {
     let count = ble_event_struct['ble_evt_t.evt.gattc_evt.params.prim_srvc_disc_rsp.count'](data);
     console.log("Count "+count)
 
+    for(let i = 0; i < count; i += 1) {
+        let service = ble_event_struct['ble_evt_t.evt.gattc_evt.params.prim_srvc_disc_rsp.services'](data, i);
+        let serviceUUID = ble_event_struct['ble_gattc_service_t.uuid.uuid'](service);
+        serviceStartHandle = ble_event_struct['ble_gattc_service_t.handle_range.start_handle'](service);
+        serviceEndHandle = ble_event_struct['ble_gattc_service_t.handle_range.end_handle'](service);
 
-    let service = ble_event_struct['ble_evt_t.evt.gattc_evt.params.prim_srvc_disc_rsp.services'](data); // Must fix binding generation to accept indices
-    console.log(ble_event_struct['ble_gattc_service_t.uuid.uuid'](service));
+        let gattcService = new GattcService(serviceUUID, serviceStartHandle, serviceEndHandle);
+        charDiscoveryStart(gattcService);
+    }
 
-    serviceStartHandle = ble_event_struct['ble_gattc_service_t.handle_range.start_handle'](service);
-    serviceEndHandle = ble_event_struct['ble_gattc_service_t.handle_range.end_handle'](service);
-    console.log("Start handle "+serviceStartHandle);
-    console.log("End handle "+serviceEndHandle);
-    charDiscoveryStart(service);
 }
 
-function onCharacteristicDiscoveryResponse(data) {
+async function onCharacteristicDiscoveryResponse(data) {
     let count = ble_event_struct['ble_evt_t.evt.gattc_evt.params.char_disc_rsp.count'](data);
     console.log(count + " characteristics found..")
     let errorCode = ble_event_struct['ble_evt_t.evt.gattc_evt.gatt_status'](data);
 
     if (errorCode != NRF_SUCCESS) {
-        console.log("Characteristic discovery failed. Error code "+errorCode);
+        console.log("No more characteristics found. Error code "+errorCode);
         return;
     }
-    for(let i = 0 ; i < count; i += 1) {
+    let handleInRange = null; // Any uuid in service range.
+    for (let i = 0; i < count; i += 1) {
+
         let characteristic0 = ble_event_struct['ble_evt_t.evt.gattc_evt.params.char_disc_rsp.chars'](data, i);
         let uuid = ble_event_struct['ble_gattc_char_t.uuid.uuid'](characteristic0);
+
         console.log("Characteristic uuid "+uuid);
-        if (uuid === 769) {
-            ledCharacteristicHandle = ble_event_struct['ble_gattc_char_t.handle_decl'](characteristic0);
-            ledCharWriteHandle = ble_event_struct['ble_gattc_char_t.handle_value'](characteristic0);
-            return descrDiscoveryStart();
-        }
+
+        characteristicHandleRange= ble_event_struct['ble_gattc_char_t.handle_decl'](characteristic0);
+        characteristicHandle = ble_event_struct['ble_gattc_char_t.handle_value'](characteristic0);
+        handleInRange = characteristicHandle;
+
+        let charService = characteristicHandleToService[characteristicHandle]
+        let characteristicObj = new GattcCharacteristic(uuid, characteristicHandle, currentAdapter, connectionHandle, characteristicHandleRange, charService.serviceEndHandle)
+        console.log("Char handle "+characteristicHandle)
+        charService.addCharacteristic(uuid, characteristicObj);
+
+        //await descrDiscoveryStart(characteristicObj); -> Needs fixing
+
     }
 
-    if (count > 0) {
-        serviceStartHandle += count;
-        charDiscoveryStart();
+    if (count > 0 && handleInRange !== null) {
+        let charService = characteristicHandleToService[handleInRange];
+        charService.incrementStartHandle(count);
+        await charDiscoveryStart(charService);
     }
 
 }
@@ -203,7 +214,7 @@ async function onAdvReport(data) {
     if (advName === 0) {
       return;
     }
-    //Galaxy S8
+
     if(advName === "Mathias "){
       console.log("Connecting to "+advName);
       const scanParam = Module.ccall('createScanParam', 'number', [], []);
@@ -212,13 +223,6 @@ async function onAdvReport(data) {
       const apiRes = await sd_ble_gap_connect(currentAdapter, peerAddr, scanParam, connParam);
       Module._free(scanParam);
       Module._free(connParam);
-      if (apiRes === 0) {
-          //console.log("Connected to "+advName);
-      } else {
-        //console.log("Connection failed..")
-        //console.log(apiRes);
-      }
-
     }
 }
 async function characteristicInit(adapter) {
@@ -254,11 +258,8 @@ async function servicesInit(adapter) {
 
 
 function dataCallback(adapter, data, length) {
-    //const arr = new Uint8Array(Module.HEAPU8.buffer.slice(data, data + length));
-
     let ble_evt_id = ble_event_struct['ble_evt_t.header.evt_id'](data);
     let ble_evt_len = ble_event_struct['ble_evt_t.header.evt_len'](data);
-    console.log(ble_evt_id)
 
     switch(ble_evt_id) {
         case 16: // BLE_GAP_EVT_CONNECTED
@@ -335,12 +336,19 @@ async function openAdapter() {
     const serialization = new SerializationTransport(h5, 5000);
     const adapter = new AdapterInternal(serialization);
     adapter.logSeverityFilterSet(sd_rpc_log_severity_t.SD_RPC_LOG_INFO)
-    await adapter.open(statusCallback, dataCallback, logCallback);
+    let res = await adapter.open(statusCallback, dataCallback, logCallback);
+    if (res === NRF_SUCCESS) {
+        console.log('Opened adapter');
+    } else {
+        console.log("Could not open adapter")
+    }
 
-    console.log('Opened');
     return adapter;
 }
 
+async function closeAdapter() {
+    return await currentAdapter.close();
+}
 async function exampleProgram() {
 
     const adapter = await openAdapter();
@@ -352,4 +360,6 @@ async function exampleProgram() {
 
 window.onload = function(){
     document.querySelector("#exampleProgram").onclick = exampleProgram
+    document.querySelector("#breatheLED").onclick = breatheLED
+    document.querySelector("#closeAdapter").onclick = closeAdapter
 }
