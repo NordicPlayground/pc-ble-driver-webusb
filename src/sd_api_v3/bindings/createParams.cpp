@@ -38,7 +38,7 @@ extern "C" {
             ble_enable_params->gap_enable_params.central_conn_count = 1;
             ble_enable_params->gap_enable_params.central_sec_count = 1;
             ble_enable_params->common_enable_params.p_conn_bw_counts = NULL;
-            ble_enable_params->common_enable_params.vs_uuid_count = 1;
+            ble_enable_params->common_enable_params.vs_uuid_count = 8;
         #endif
         return ble_enable_params;
     }
@@ -243,5 +243,19 @@ extern "C" {
         md->vlen       = vlen;
 
         return md;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    ble_gattc_write_params_t * createGattcWriteParams(uint16_t handle, uint16_t len, uint8_t* p_value, uint8_t write_op, uint16_t offset)
+    {
+        ble_gattc_write_params_t* write_params = new ble_gattc_write_params_t;
+        memset(write_params, 0, sizeof(ble_gattc_write_params_t));
+
+        write_params->handle = handle;
+        write_params->len = len;
+        write_params->p_value = p_value;
+        write_params->write_op = write_op;
+        write_params->offset = offset;
+        return write_params;
     }
 }
