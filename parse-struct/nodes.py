@@ -41,9 +41,9 @@ class StructEmbedding:
         self.pathstr = "".join(pathList)
 
     def __hash__(self):
-        return hash(self.pathstr)
+        return hash(self.rootType + self.pathstr)
     def __eq__(self, other):
-        return self.pathstr == other.pathstr
+        return self.rootType + self.pathstr == other.rootType + other.pathstr
     def __str__(self):
         return self.pathstr
 
@@ -68,11 +68,10 @@ def recursiveStructParser(parentStruct, path, rootType, accessType):
         if field[2] != -1: # Field[2] stores the size of an array, where -1 is no array, and 0 is a raw pointer
             embedding.pointerType = True
         if field[2] > 0: # Only use array indexing for struct types
-            embedding.ArrayType = True
+            embedding.arrayType = True
 
 
         structEmbeddings.add(embedding)
-
         if field[0] not in primitiveTypes:
             embedding.structPointer = True # Return pointers to struct types
 
@@ -96,7 +95,7 @@ def recursiveStructParser(parentStruct, path, rootType, accessType):
         if field[2] != -1: # Field[2] stores the size of an array, where -1 is no array, and 0 is a raw pointer
             embedding.pointerType = True
         if field[2] > 0: # Only use array indexing for struct types
-            embedding.ArrayType = True
+            embedding.arrayType = True
 
         if field[0] not in primitiveTypes:
             embedding.structPointer = True # Return pointers to struct types

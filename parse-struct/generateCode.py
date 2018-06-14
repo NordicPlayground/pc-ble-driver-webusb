@@ -7,17 +7,17 @@ def generateCppEmscriptenFunctionBinding(pathObject):
     '''
     retType = pathObject.returnType
     structType = pathObject.rootType
-    pathstr = "evt_data" + pathObject.pathstr
+    pathstr = structType+"_evt_data" + pathObject.pathstr
     funcName = pathstr.replace("->","__").replace(".", "__")
     str = "EMSCRIPTEN_KEEPALIVE\n"
     if pathObject.arrayType: # Index argument specified
-        str += "{}* {}({}* evt_data, uint8_t index){{return &{}[index];}}".format(retType, funcName, structType, pathstr)
+        str += "{0}* {1}({2}* {2}_evt_data, uint8_t index){{return &{3}[index];}}".format(retType, funcName, structType, pathstr)
     elif pathObject.pointerType: # Index argument specified
-            str += "{}* {}({}* evt_data){{return {};}}".format(retType, funcName, structType, pathstr)
+            str += "{0}* {1}({2}* {2}_evt_data){{return {3};}}".format(retType, funcName, structType, pathstr)
     elif pathObject.structPointer: # Index argument specified
-            str += "{}* {}({}* evt_data){{return &{};}}".format(retType, funcName, structType, pathstr)
+            str += "{0}* {1}({2}* {2}_evt_data){{return &{3};}}".format(retType, funcName, structType, pathstr)
     else:
-        str += "{} {}({}* evt_data){{return {};}}".format(retType, funcName, structType, pathstr)
+        str += "{0} {1}({2}* {2}_evt_data){{return {3};}}".format(retType, funcName, structType, pathstr)
     return str
 
 
@@ -26,9 +26,9 @@ def generateJsEmscriptenFunctionBinding(pathObject):
         Return wrapped JS binding for struct field
     '''
 
-    pathstr = "evt_data" + pathObject.pathstr
+    pathstr = pathObject.rootType +"_evt_data" + pathObject.pathstr
     cppFuncName = pathstr.replace("->","__").replace(".", "__")
-    jsFuncName = pathstr.replace("->",".").replace("evt_data", pathObject.rootType)
+    jsFuncName = pathstr.replace("->",".").replace(pathObject.rootType + "_evt_data", pathObject.rootType)
     cwrap = ""
 
     if pathObject.arrayType: # Index argument specified
