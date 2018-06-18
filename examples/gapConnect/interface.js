@@ -262,23 +262,23 @@ function dataCallback(adapter, data, length) {
     let ble_evt_len = ble_event_struct['ble_evt_t.header.evt_len'](data);
 
     switch(ble_evt_id) {
-        case 16: // BLE_GAP_EVT_CONNECTED
+        case BLE_GAP_EVT_CONNECTED:
           onConnected();
           break;
 
-        case 29: // BLE_GAP_EVT_ADV_REPORT
+        case BLE_GAP_EVT_ADV_REPORT:
             onAdvReport(data);
             break;
-        case 48: //BLE_GATTC_EVT_PRIM_SRVC_DISC_RSP
+        case BLE_GATTC_EVT_PRIM_SRVC_DISC_RSP:
             onServiceDiscoveryResponse(data);
             break;
-        case 50: // BLE_GATTC_EVT_CHAR_DISC_RSP
+        case BLE_GATTC_EVT_CHAR_DISC_RSP:
             onCharacteristicDiscoveryResponse(data);
             break;
-        case 51: // BLE_GATTC_EVT_DESC_DISC_RSP:
+        case BLE_GATTC_EVT_DESC_DISC_RSP:
             onDescriptorDiscoveryResponse(data);
             break;
-        case 56: //BLE_GATTC_EVT_WRITE_RSP
+        case BLE_GATTC_EVT_WRITE_RSP:
             onWriteResponse(data);
             break;
         default:
@@ -331,7 +331,7 @@ async function bleStackInit(adapter) {
 }
 
 async function openAdapter() {
-    const webusb = new WebusbInterface(null);
+    const webusb = new WebusbInterface(115200);
     const h5 = new H5Transport(webusb, 5000);
     const serialization = new SerializationTransport(h5, 5000);
     const adapter = new AdapterInternal(serialization);

@@ -38,7 +38,7 @@ class H5Transport extends Transport {
         this.setupStateMachine();
     }
 
-    async open(statusCallback, dataCallback, logCallback) {
+    async open(statusCallback, dataCallback, logCallback, baudRate) {
         if (this.currentState !== h5_state.STATE_START) {
             this.log('Not able to open, current state is not valid');
             return NRF_ERROR_INTERNAL;

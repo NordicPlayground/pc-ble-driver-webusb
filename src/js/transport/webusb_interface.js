@@ -1,14 +1,16 @@
 class WebusbInterface extends Transport {
 
-    constructor() {
+    constructor(baudRate = 115200) {
         super();
         this.device = null;
+        this.baudRate = baudRate;
     }
     open(statusCallback, dataCallback, logCallback) {
         super.open(statusCallback, dataCallback, logCallback);
 
         return new Promise(resolve => {
             serial.requestPort().then(selectedPort => {
+                console.log(this.baudRate)
                 this.port = selectedPort;
                 this.webusbConnect(resolve);
             }).catch(error => {
@@ -23,7 +25,7 @@ class WebusbInterface extends Transport {
             console.error(error);
             resolve(NRF_ERROR_INTERNAL);
         };
-        this.port.connect().then(() => {
+        this.port.connect(this.baudRate).then(() => {
             this.port.onReceive = this.dataReceived.bind(this);
             this.port.onReceiveError = error => {
                 console.error(error);

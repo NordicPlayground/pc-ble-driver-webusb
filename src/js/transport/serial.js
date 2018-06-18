@@ -18,7 +18,7 @@ const serial = {};
       this.device_ = device;
     };
 
-    serial.Port.prototype.connect = function() {
+    serial.Port.prototype.connect = function(baudRate) {
         const readLoop = () => {
             this.device_.transferIn(3, 512).then(result => {
                 this.onReceive(result.data);
@@ -28,6 +28,9 @@ const serial = {};
             });
         };
 
+        // Bytes 0-3 are baudrate LE. Byte 4 is stop bits. Byte 5 is parity (0 = no parity),Byte 6 is number of data bits.
+        let controlData = new Uint8Array([baudRate & 0xFF, (baudRate>>8) & 0xFF, (baudRate>>16) & 0xFF, (baudRate>>24) & 0xFF, 0, 0, 8]);
+        console.log(controlData)
         return this.device_.open()
             .then(() => {
                 console.log(this.device_);
@@ -39,69 +42,11 @@ const serial = {};
             .then(() => this.device_.claimInterface(1))
             .then(() => this.device_.selectAlternateInterface(1, 0))
             .then(() => this.device_.controlTransferOut({
-                requestType: 'vendor',
-                recipient: 'interface',
-                request: 0x01,
-                value: 0x40,
-                index: 0x00 }))
-            .then(() => this.device_.controlTransferOut({
                 requestType: 'class',
                 recipient: 'interface',
                 request: 0x20,
                 value: 0x00,
-                index: 0x00 }, new Uint8Array([0x80, 0x25, 0x00, 0x00, 0x00, 0x00, 0x08])))
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x00,
-                index: 0x00 }))
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x00,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x80, 0x25, 0x00, 0x00, 0x00, 0x00, 0x08])))
-
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x00,
-                index: 0x00 }))
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x00,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
+                index: 0x00 }, controlData))
 
             .then(() => this.device_.controlTransferOut({
                 requestType: 'class',
@@ -109,103 +54,6 @@ const serial = {};
                 request: 0x22,
                 value: 0x00,
                 index: 0x00 }))
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x03,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x03,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x03,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x03,
-                index: 0x00 }))
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x03,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x03,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x22,
-                value: 0x03,
-                index: 0x00 }))
-
-            .then(() => this.device_.controlTransferOut({
-                requestType: 'class',
-                recipient: 'interface',
-                request: 0x20,
-                value: 0x00,
-                index: 0x00 }, new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08])))
-
             .then(() => {
                 readLoop();
             });
