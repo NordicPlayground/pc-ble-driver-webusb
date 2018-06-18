@@ -30,7 +30,6 @@ const serial = {};
 
         // Bytes 0-3 are baudrate LE. Byte 4 is stop bits. Byte 5 is parity (0 = no parity),Byte 6 is number of data bits.
         let controlData = new Uint8Array([baudRate & 0xFF, (baudRate>>8) & 0xFF, (baudRate>>16) & 0xFF, (baudRate>>24) & 0xFF, 0, 0, 8]);
-        console.log(controlData)
         return this.device_.open()
             .then(() => {
                 console.log(this.device_);
