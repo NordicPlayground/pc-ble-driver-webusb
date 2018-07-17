@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 include (cmake/pc-ble-driver.cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -O2")
 
 
 # SDK source files, different per API version
@@ -70,7 +70,7 @@ foreach(SD_API_VER ${SD_API_VERS})
     # Provide the NRF_SD_BLE_API_VERSION macro to each variant
     string(REGEX MATCH "[0-9]+$" _SD_API_VER_NUM "${SD_API_VER}")
     set(SD_API_VER_COMPILER_DEF_NUM "-D${SD_API_VER_COMPILER_DEF}=${_SD_API_VER_NUM}")
-    
+
     target_compile_definitions(${PC_BLE_DRIVER_${SD_API_VER}_OBJ_LIB} PRIVATE "${SD_API_VER_COMPILER_DEF_NUM}")
     target_compile_options(${PC_BLE_DRIVER_${SD_API_VER}_OBJ_LIB} PRIVATE "--bind")
 
