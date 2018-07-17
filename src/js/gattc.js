@@ -44,9 +44,15 @@ class GattcCharacteristic {
 
         let dataPtr = Module._malloc(data.length);
         Module.HEAPU8.set(data, dataPtr);
-        let write_params = Module.ccall('createGattcWriteParams', 'number', ['number', 'number', 'number', 'number', 'number'], [this.charHandle, data.length, dataPtr, 1, 0]);
-        let apiRes = await sd_ble_gattc_write(this.adapter, this.connection, write_params);
-        Module._free(write_params);
+        const writeParams = new ble_gattc_write_params_t();
+        writeParams.handle.SET(this.charHandle);
+        writeParams.len.SET(data.length);
+        writeParams.p_value.SET(dataPtr);
+        writeParams.write_op.SET(1);
+        writeParams.offset.SET(0);
+        
+        let apiRes = await sd_ble_gattc_write(this.adapter, this.connection, writeParams);
+        writeParams.delete();
         Module._free(dataPtr);
         return apiRes;
     }
