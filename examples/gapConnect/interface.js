@@ -1,8 +1,11 @@
 let currentAdapter = null;
-let serviceHandle = Module._malloc(2); // uint16 handle to services
+let serviceHandle = null;
 
 let connectionHandle = 0;
 
+function preSetup() {
+    serviceHandle = Module._malloc(2); // uint16 handle to services
+}
 function statusCallback(adapter, code, message) {
     console.log(code, message);
 }
@@ -337,11 +340,14 @@ async function openAdapter() {
 
     return adapter;
 }
-
+function main() {
+    console.log("main")
+}
 async function closeAdapter() {
     return await currentAdapter.close();
 }
 async function exampleProgram() {
+    preSetup();
     const adapter = await openAdapter();
     currentAdapter = adapter;
     await bleStackInit(adapter);
@@ -350,7 +356,11 @@ async function exampleProgram() {
 }
 
 window.onload = function(){
-    document.querySelector("#exampleProgram").onclick = exampleProgram
-    document.querySelector("#breatheLED").onclick = breatheLED
-    document.querySelector("#closeAdapter").onclick = closeAdapter
+
+    Module['onRuntimeInitialized'] = () => {
+        document.querySelector("#exampleProgram").onclick = exampleProgram
+        document.querySelector("#breatheLED").onclick = breatheLED
+        document.querySelector("#closeAdapter").onclick = closeAdapter
+    }
+
 }
