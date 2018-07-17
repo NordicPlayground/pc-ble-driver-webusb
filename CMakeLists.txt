@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 include (cmake/pc-ble-driver.cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -O3")
 
 
 # SDK source files, different per API version
@@ -31,9 +31,6 @@ add_definitions(
     -DSD_RPC_EXPORTS
     -DHCI_LINK_CONTROL # Adds support for Link Control packets according to the HCI standard
 )
-set(ASSERTIONS 2)
-
-
 
 # Add libraries
 foreach(SD_API_VER ${SD_API_VERS})
