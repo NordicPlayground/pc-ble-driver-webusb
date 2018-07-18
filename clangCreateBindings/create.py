@@ -1,11 +1,15 @@
-print("Generating code for configuration of softdevice..")
-import clangCreateBindings.parameterStructs.run
-print()
+from clangCreateBindings.parameterStructs.run import build as buildParameterStructs
+from clangCreateBindings.parseStruct.run import build as buildParseStruct
+from clangCreateBindings.sdEncodeDecode.createBindings import build as  buildSdEncodeDecode
 
-print("Generating code to parse event ble struct..")
-import clangCreateBindings.parseStruct.run
-print()
 
-print("Generating code to call encode/code api functions")
-import clangCreateBindings.sdEncodeDecode.createBindings
-print()
+def build(version):
+    print("Generating code for configuration of softdevice..")
+    buildParameterStructs(version)
+    print()
+    print("Generating code to parse event ble struct..")
+    buildParseStruct(version)
+    print()
+    print("Generating code to call encode/code api functions")
+    buildSdEncodeDecode(version)
+    print()

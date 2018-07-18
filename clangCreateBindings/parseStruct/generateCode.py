@@ -40,7 +40,7 @@ def generateJsEmscriptenFunctionBinding(pathObject):
     return str
 
 
-def writeCppFunctions(functions, dir):
+def writeCppFunctions(functions, dir, version):
     source_code ="""/* Copyright (c) 2018 Nordic Semiconductor. All Rights Reserved.
      *
      * The information contained herein is property of Nordic Semiconductor ASA.
@@ -71,16 +71,16 @@ def writeCppFunctions(functions, dir):
     #endif
     """.format(functions)
 
-    with open(dir+"\\src\\sd_api_v3\\bindings\\ble_evt_struct.cpp", "w") as file:
+    with open(dir+"/src/sd_api_v{}/bindings/ble_evt_struct.cpp".format(version), "w") as file:
         file.write(source_code)
-        print("Wrote {}\\src\\sd_api_v3\\bindings\\ble_evt_struct.cpp".format(dir))
+        print("Wrote {}/src/sd_api_v{}/bindings/ble_evt_struct.cpp".format(dir, version))
 
-def writeJsFunctions(functions, dir):
+def writeJsFunctions(functions, dir, version):
     source_code ="""let ble_event_struct = {{
     {}
     }}
     """.format(functions)
 
-    with open(dir+"\\src\\js\\bindings\\bleEvtStruct.js", "w") as file:
+    with open(dir+"/src/js/bindings/sd_api_v{}/bleEvtStruct.js".format(version), "w") as file:
         file.write(source_code)
-        print("Wrote {}\\src\\js\\bindings\\bleEvtStruct.js".format(dir))
+        print("Wrote {}/src/js/bindings/sd_api_v{}/bleEvtStruct.js".format(dir, version))

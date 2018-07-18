@@ -3,39 +3,10 @@ from clang.cindex import CursorKind
 import os
 from clangCreateBindings.parameterStructs.structSerialization import StructData, StructChild
 
-
-pc_ble_drive_webusb_root = os.getcwd()
-pc_ble_drive_root = pc_ble_drive_webusb_root + "\\pc-ble-driver"
-
-sdk_root = pc_ble_drive_root+"\\src\\sd_api_v3\\sdk"
-source_files_to_parse = os.listdir("{}\\components\\softdevice\\s132\\headers".format(sdk_root))
-headers = []
-
-compArgs    = '-x c++ --std=c++11'.split()
-
-include_dir = [pc_ble_drive_root+"\\include\\common\\internal",
-pc_ble_drive_root+"\\include\\common\\internal\\transport",
-pc_ble_drive_root+"\\include\\common\\config"]
-
-cpp_dir = [sdk_root+"\\components\\serialization\\application\\codecs\\s132\\serializers",
-sdk_root+"\\components\\serialization\\application\\codecs\\common",
-sdk_root+"\\components\\libraries\\util",
-sdk_root+"\\components\\libraries\\util",
-sdk_root+"\\components\\serialization\\common",
-sdk_root+"\\components\\serialization\\common\\struct_ser\\s132",
-sdk_root+"\\components\\softdevice\\s132\\headers"]
-
-file_root = sdk_root+"\\components\\softdevice\\s132\\headers\\"
-
-pc_ble_driver_includes = [ '-I' + inc for inc in include_dir ]
-pc_ble_driver_cppincludes = [ '-I' + inc for inc in cpp_dir ]
-compArgs    = compArgs + pc_ble_driver_includes + pc_ble_driver_cppincludes
-
-
 parse_files = []
-for filename in source_files_to_parse:
-    if filename.endswith(".h"):
-        parse_files.append(filename)
+compArgs = ""
+file_root = ""
+headers = []
 
 def filePointers():
     '''
@@ -104,3 +75,46 @@ def parseAll(parsedStructs):
                 structNode = createStructNode(c)
                 if structNode is not None:
                     parsedStructs[structNode.dataType] = structNode
+
+def setup(version):
+    global parse_files
+    global compArgs
+    global headers
+    global parsedStructs
+    global file_root
+
+    parsedStructs = set()
+    pc_ble_drive_webusb_root = os.getcwd()
+    pc_ble_drive_root = pc_ble_drive_webusb_root + "/pc-ble-driver"
+
+    sdk_root = pc_ble_drive_root+"/src/sd_api_v3/sdk"
+    source_files_to_parse = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
+    headers = []
+
+    compArgs    = '-x c++ --std=c++11'.split()
+
+    include_dir = [pc_ble_drive_root+"/include/common/internal",
+    pc_ble_drive_root+"/include/common/internal/transport",
+    pc_ble_drive_root+"/include/common/config"]
+
+    cpp_dir = [sdk_root+"/components/serialization/application/codecs/s132/serializers",
+    sdk_root+"/components/serialization/application/codecs/common",
+    sdk_root+"/components/libraries/util",
+    sdk_root+"/components/libraries/util",
+    sdk_root+"/components/serialization/common",
+    sdk_root+"/components/serialization/common/struct_ser/s132",
+    sdk_root+"/components/softdevice/s132/headers"]
+
+    file_root = sdk_root+"/components/softdevice/s132/headers/"
+
+    pc_ble_driver_includes = [ '-I' + inc for inc in include_dir ]
+    pc_ble_driver_cppincludes = [ '-I' + inc for inc in cpp_dir ]
+    compArgs    = compArgs + pc_ble_driver_includes + pc_ble_driver_cppincludes
+
+
+    parse_files = []
+    for filename in source_files_to_parse:
+        if filename.endswith(".h"):
+            parse_files.append(filename)
+
+    return pc_ble_drive_webusb_root, headers
