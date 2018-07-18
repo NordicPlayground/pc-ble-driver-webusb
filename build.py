@@ -97,6 +97,7 @@ for ver in SD_VERS:
 
     if bundleBindings:
         print("Processing transport and encode/decode..")
+        os.system("npm install -g uglify-es")
         os.system(createBundle)
 
     if compileLibrary:
