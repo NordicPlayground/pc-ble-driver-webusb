@@ -76,7 +76,7 @@ def parseAll(parsedStructs):
                 if structNode is not None:
                     parsedStructs[structNode.dataType] = structNode
 
-def setup(version):
+def setup(version, s_ver):
     global parse_files
     global compArgs
     global headers
@@ -87,7 +87,7 @@ def setup(version):
     pc_ble_drive_webusb_root = os.getcwd()
     pc_ble_drive_root = pc_ble_drive_webusb_root + "/pc-ble-driver"
 
-    sdk_root = pc_ble_drive_root+"/src/sd_api_v3/sdk"
+    sdk_root = pc_ble_drive_root+"/src/sd_api_v{}/sdk".format(version)
     source_files_to_parse = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
     headers = []
 
@@ -97,12 +97,11 @@ def setup(version):
     pc_ble_drive_root+"/include/common/internal/transport",
     pc_ble_drive_root+"/include/common/config"]
 
-    cpp_dir = [sdk_root+"/components/serialization/application/codecs/s132/serializers",
+    cpp_dir = [sdk_root+"/components/serialization/application/codecs/{s_ver}/serializers".format(s_ver=s_ver),
     sdk_root+"/components/serialization/application/codecs/common",
     sdk_root+"/components/libraries/util",
-    sdk_root+"/components/libraries/util",
     sdk_root+"/components/serialization/common",
-    sdk_root+"/components/serialization/common/struct_ser/s132",
+    sdk_root+"/components/serialization/common/struct_ser/{s_ver}".format(s_ver=s_ver),
     sdk_root+"/components/softdevice/s132/headers"]
 
     file_root = sdk_root+"/components/softdevice/s132/headers/"

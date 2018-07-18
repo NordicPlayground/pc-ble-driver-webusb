@@ -27,12 +27,12 @@ def filePointers(file_root, args, parse_files):
     for filename in parse_files:
         yield idx.parse(file_root+filename, args=args)
 
-def build(version):
+def build(version, s_ver):
     pc_ble_drive_webusb_root = os.getcwd()
     pc_ble_drive_root = pc_ble_drive_webusb_root + "/pc-ble-driver"
 
     sdk_root = pc_ble_drive_root+"/src/sd_api_v{}/sdk".format(version)
-    source_files_to_parse = os.listdir("{}/components/serialization/application/codecs/s132/serializers".format(sdk_root))
+    source_files_to_parse = os.listdir("{}/components/serialization/application/codecs/{s_ver}/serializers".format(sdk_root, s_ver=s_ver))
 
     functions = []
     jsFunctions = []
@@ -44,15 +44,15 @@ def build(version):
 
     include_dir = [pc_ble_drive_root+"/include/common",pc_ble_drive_root+"/include/common/sdk_compat",
     pc_ble_drive_root+"/include/common/internal",pc_ble_drive_root+"/include/common/internal/transport"]
-    cpp_dir = [sdk_root+"/components/serialization/application/codecs/s132/serializers",
+    cpp_dir = [sdk_root+"/components/serialization/application/codecs/{s_ver}/serializers".format(s_ver = s_ver),
     sdk_root+"/components/serialization/application/codecs/common",
     sdk_root+"/components/libraries/util",
     sdk_root+"/components/libraries/util",
     sdk_root+"/components/serialization/common",
-    sdk_root+"/components/serialization/common/struct_ser/s132",
+    sdk_root+"/components/serialization/common/struct_ser/{s_ver}".format(s_ver = s_ver),
     sdk_root+"/components/softdevice/s132/headers"]
 
-    file_root = sdk_root+"/components/serialization/application/codecs/s132/serializers/"
+    file_root = sdk_root+"/components/serialization/application/codecs/{s_ver}/serializers/".format(s_ver = s_ver)
 
     pc_ble_driver_includes = [ '-I' + inc for inc in include_dir ]
     pc_ble_driver_cppincludes = [ '-I' + inc for inc in cpp_dir ]

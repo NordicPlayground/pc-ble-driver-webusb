@@ -8,7 +8,7 @@ clangPathSet = False
 generateBindings = True
 bundleBindings = True
 compileLibrary = True
-
+SD_VERS = []
 
 argn = 1
 while argn < len(sys.argv):
@@ -29,12 +29,9 @@ while argn < len(sys.argv):
         compileLibrary = False
         continue
     elif (arg == "-sd-ver"):
-        SD_VERS = sys.argv[argn].strip().split(",")
+        SD_VERS = [int(v) for v in sys.argv[argn].strip().split(",")]
         argn += 1
         continue
-
-
-SD_VERS = [3] # currently only v3
 
 checkEnv = True
 
@@ -43,14 +40,16 @@ for req in reqs:
     if req in os.environ:
         print("Found {} = {}".format(req, os.environ[req]))
     else:
-        print("Could not find environment variable {}. Make sure it is exported.".format(req))
+        print("ERROR: Could not find environment variable {}. Make sure it is exported.".format(req))
         checkEnv = False
 print()
 if not checkEnv:
-    print("Environment variables used by emscripten must be exported.")
+    print("ERROR: Environment variables used by emscripten must be exported.")
     sys.exit(1)
 
-
+if len(SD_VERS) == 0:
+    print("ERROR: No softdevice versions specified.. (ex: -sd-ver 2,3)")
+    sys.exit(1)
 
 if not os.path.isdir('build'):
     os.makedirs('build')
@@ -64,6 +63,7 @@ if generateBindings:
     if not os.path.isdir('src/js/bindings'):
         os.makedirs('src/js/bindings')
     for ver in SD_VERS:
+        print("... for version {}\n\n".format(ver))
         if not os.path.isdir('src/sd_api_v{}'.format(ver)):
             os.makedirs('src/sd_api_v{}'.format(ver))
         if not os.path.isdir('src/sd_api_v{}/bindings'.format(ver)):
@@ -79,11 +79,11 @@ if generateBindings:
             from clangCreateBindings.create import build as buildBindings
             buildBindings(ver)
         except clang.cindex.LibclangError:
-            print("Could not locate clang library at path: '{}'".format(libclangpath))
+            print("ERROR: Could not locate clang library at path: '{}'".format(libclangpath))
             sys.exit(1)
     print("Bindings generated!\n\n")
 
-cmake = "emcmake cmake"
+cmake = 'emcmake cmake -DSD_API_VER_NUMS={vers}'.format(vers = ';'.join([str(v) for v in SD_VERS]))
 make = "emmake make"
 for ver in SD_VERS:
     emscripten = """em++ -O2 --js-opts 1 -s WASM=1 -o build/v{ver}/pc_ble_driver_sd_api_v{ver}.js libpc_ble_driver_static_sd_api_v{ver}.a -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'getValue', 'setValue', 'cwrap', 'writeArrayToMemory']" """.format(ver=ver)
@@ -93,7 +93,7 @@ for ver in SD_VERS:
     src/js/transport/transport.js src/js/transport/h5.js src/js/transport/h5_transport.js src/js/transport/h5_transport_exit_criterias.js \
     src/js/transport/serial.js src/js/transport/serialization_transport.js src/js/transport/slip.js src/js/transport/webusb_interface.js \
     src/js/ble_impl/common.js src/js/ble_impl/ble_gap_impl.js src/js/ble_impl/ble_gattc_impl.js src/js/ble_impl/ble_gatts_impl.js src/js/ble_impl/ble_impl.js \
-    --compress -ecma 8 -o build/v3/bundle.js""".format(ver=ver)
+    --compress -ecma 8 -o build/v{ver}/bundle.js""".format(ver=ver)
 
     if bundleBindings:
         print("Processing transport and encode/decode..")

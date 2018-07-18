@@ -1,7 +1,7 @@
 from clangCreateBindings.parameterStructs.clangParse import parseAll, setup
 
-def build(version):
-    pc_ble_drive_webusb_root, headers = setup(version)
+def build(version, s_ver):
+    pc_ble_drive_webusb_root, headers = setup(version, s_ver)
     openList = ["ble_gap_adv_params_t", "ble_gap_conn_sec_mode_t", "ble_gap_conn_params_t",\
     "ble_gap_enc_info_t", "ble_gap_irk_t", "ble_gap_sign_info_t", "ble_gap_addr_t", "ble_gap_id_key_t", "ble_gap_privacy_params_t",\
     "ble_gap_sec_params_t", "ble_gap_conn_sec_t", "ble_gap_scan_params_t", "ble_gap_master_id_t",\
@@ -24,7 +24,10 @@ def build(version):
     while(openList):
         structType = openList.pop()
         closedList.append(structType)
-        struct = structs[structType]
+        try:
+            struct = structs[structType]
+        except KeyError:
+            continue # Struct probably not used in softdevice api version being processed
         for child in struct.members:
             if child.dataType in structs and child.dataType not in openList and child.dataType not in closedList:
                 openList.append(child.dataType)
