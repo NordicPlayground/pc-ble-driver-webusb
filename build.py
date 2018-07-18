@@ -59,7 +59,9 @@ for ver in SD_VERS:
 
 if generateBindings:
     print("Using clang to autogenerate bindings for Emscripten..")
-
+    if clangPathSet:
+        clang.cindex.Config.set_library_path(libclangpath)
+        
     if not os.path.isdir('src/js/bindings'):
         os.makedirs('src/js/bindings')
     for ver in SD_VERS:
@@ -73,9 +75,6 @@ if generateBindings:
             os.makedirs('src/js/bindings/sd_api_v{}'.format(ver))
 
         try:
-            if clangPathSet:
-                clang.cindex.Config.set_library_path(libclangpath)
-
             from clangCreateBindings.create import build as buildBindings
             buildBindings(ver)
         except clang.cindex.LibclangError:
