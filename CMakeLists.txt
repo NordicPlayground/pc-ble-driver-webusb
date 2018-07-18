@@ -7,8 +7,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -O2")
 # SDK source files, different per API version
 foreach(SD_API_VER ${SD_API_VERS})
     string(TOLOWER ${SD_API_VER} SD_API_VER_L)
-    file(GLOB_RECURSE LIB_SDK_${SD_API_VER}_C_SRC_FILES "pc-ble-driver/src/${SD_API_VER_L}/sdk/components/*.c" "src/${SD_API_VER_L}/bindings/*.c")
-    file(GLOB_RECURSE LIB_SDK_${SD_API_VER}_CPP_SRC_FILES "pc-ble-driver/src/${SD_API_VER_L}/sdk/components*.cpp" "src/${SD_API_VER_L}/bindings/*.cpp")
+    file(GLOB_RECURSE LIB_SDK_${SD_API_VER}_C_SRC_FILES "pc-ble-driver/src/${SD_API_VER_L}/sdk/components/*.c" "src/${SD_API_VER_L}/bindings/*.c" "src/mock/*.c")
+    file(GLOB_RECURSE LIB_SDK_${SD_API_VER}_CPP_SRC_FILES "pc-ble-driver/src/${SD_API_VER_L}/sdk/components/*.cpp" "src/${SD_API_VER_L}/bindings/*.cpp" "src/mock/*.cpp")
 endforeach(SD_API_VER)
 
 # Set C, CPP and platform source file groups and properties

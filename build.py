@@ -11,6 +11,7 @@ compileLibrary = True
 SD_VERS = []
 
 argn = 1
+EMSCRIPTEN_ASSERTIONS = 0
 while argn < len(sys.argv):
     arg = sys.argv[argn]
     argn += 1
@@ -31,6 +32,12 @@ while argn < len(sys.argv):
     elif (arg == "-sd-ver"):
         SD_VERS = [int(v) for v in sys.argv[argn].strip().split(",")]
         argn += 1
+        continue
+    elif (arg == "-emscripten-assert"):
+        val = int(sys.argv[argn])
+        argn += 1
+        if val >= 0 and val <=2:
+            EMSCRIPTEN_ASSERTIONS = val
         continue
 
 checkEnv = True
@@ -84,7 +91,7 @@ if generateBindings:
 
 if compileLibrary:
     cmake = 'emcmake cmake -DSD_API_VER_NUMS=\'{vers}\''.format(vers = ';'.join([str(v) for v in SD_VERS]))
-    make = "emmake make"
+    make = "emmake make -s ASSERTIONS={assertions}".format(assertions=EMSCRIPTEN_ASSERTIONS)
     print("Configure CMake...")
     os.system(cmake)
     print("Compiling to LLVM...")
