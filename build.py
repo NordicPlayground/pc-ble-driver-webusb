@@ -83,7 +83,7 @@ if generateBindings:
     print("Bindings generated!\n\n")
 
 if compileLibrary:
-    cmake = 'emcmake cmake -DSD_API_VER_NUMS={vers}'.format(vers = ';'.join([str(v) for v in SD_VERS]))
+    cmake = 'emcmake cmake -DSD_API_VER_NUMS=\'{vers}\''.format(vers = ';'.join([str(v) for v in SD_VERS]))
     make = "emmake make"
     print("Configure CMake...")
     os.system(cmake)
