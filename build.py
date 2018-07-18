@@ -61,7 +61,7 @@ if generateBindings:
     print("Using clang to autogenerate bindings for Emscripten..")
     if clangPathSet:
         clang.cindex.Config.set_library_path(libclangpath)
-        
+
     if not os.path.isdir('src/js/bindings'):
         os.makedirs('src/js/bindings')
     for ver in SD_VERS:
@@ -82,8 +82,17 @@ if generateBindings:
             sys.exit(1)
     print("Bindings generated!\n\n")
 
-cmake = 'emcmake cmake -DSD_API_VER_NUMS={vers}'.format(vers = ';'.join([str(v) for v in SD_VERS]))
-make = "emmake make"
+if compileLibrary:
+    cmake = 'emcmake cmake -DSD_API_VER_NUMS={vers}'.format(vers = ';'.join([str(v) for v in SD_VERS]))
+    make = "emmake make"
+    print("Configure CMake...")
+    os.system(cmake)
+    print("Compiling to LLVM...")
+    os.system(make)
+
+if bundleBindings:
+    os.system("npm install -g uglify-es")
+
 for ver in SD_VERS:
     emscripten = """em++ -O2 --js-opts 1 -s WASM=1 -o build/v{ver}/pc_ble_driver_sd_api_v{ver}.js libpc_ble_driver_static_sd_api_v{ver}.a -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'getValue', 'setValue', 'cwrap', 'writeArrayToMemory']" """.format(ver=ver)
 
@@ -96,12 +105,9 @@ for ver in SD_VERS:
 
     if bundleBindings:
         print("Processing transport and encode/decode..")
-        os.system("npm install -g uglify-es")
         os.system(createBundle)
 
     if compileLibrary:
-        print("Compiling...\n")
-        os.system(cmake)
-        os.system(make)
+        print("Compiling LLVM to WASM. (build/v{})\n".format(ver))
         os.system(emscripten)
         os.remove("libpc_ble_driver_static_sd_api_v{}.a".format(ver))

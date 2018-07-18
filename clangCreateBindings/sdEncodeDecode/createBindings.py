@@ -64,12 +64,8 @@ def build(version, s_ver):
     for filename in source_files_to_parse:
         if filename.endswith(".c"):
             parse_files.append(filename)
-            header_file = filename.replace(".c", ".h")
-            if header_file in source_files_to_parse:
-                parse_headerfiles.append(header_file)
-
-
-
+        if filename.endswith(".h") and "nrf_soc" not in filename:
+            parse_headerfiles.append(filename)
 
     for tu in filePointers(file_root, compArgs, parse_files):
         for c in tu.cursor.walk_preorder():

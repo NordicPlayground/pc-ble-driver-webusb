@@ -39,6 +39,8 @@ def createStructNode(structParent):
 
             isArray = prev.type.get_array_size() != -1
             isPointer = prev.type.kind == clang.cindex.TypeKind.POINTER
+            if isPointer and "**" in prev.type.spelling: # Hack to check if pointer is a pointer to another pointer
+                isPointer = 2
             isBitfield = prev.is_bitfield()
 
             childStruct = StructChild(structParent.spelling, dataType, dataName, isPointer, isArray, isBitfield)

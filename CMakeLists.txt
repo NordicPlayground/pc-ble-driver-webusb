@@ -72,7 +72,6 @@ foreach(SD_API_VER ${SD_API_VERS})
     set(SD_API_VER_COMPILER_DEF_NUM "-D${SD_API_VER_COMPILER_DEF}=${_SD_API_VER_NUM}")
 
     target_compile_definitions(${PC_BLE_DRIVER_${SD_API_VER}_OBJ_LIB} PRIVATE "${SD_API_VER_COMPILER_DEF_NUM}")
-    target_compile_options(${PC_BLE_DRIVER_${SD_API_VER}_OBJ_LIB} PRIVATE "--bind")
 
 
 

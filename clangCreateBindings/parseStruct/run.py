@@ -3,6 +3,8 @@ from clangCreateBindings.parseStruct.clangParse import filePointers, clangIsStru
 from clangCreateBindings.parseStruct.generateCode import generateCppEmscriptenFunctionBinding, generateJsEmscriptenFunctionBinding, writeCppFunctions, writeJsFunctions
 
 def build(version, s_ver):
+    global structs
+    global structEmbeddings
     pc_ble_drive_webusb_root = setup(version, s_ver)
     for tu in filePointers():
         for c in tu.cursor.walk_preorder():
@@ -18,6 +20,7 @@ def build(version, s_ver):
 
     cppFunctions = "\n".join([generateCppEmscriptenFunctionBinding(obj) for obj in list(structEmbeddings)])
     jsFunctions = ",\n".join([generateJsEmscriptenFunctionBinding(obj) for obj in list(structEmbeddings)])
-
+    structs = {}
+    structEmbeddings = set()
     writeCppFunctions(cppFunctions, pc_ble_drive_webusb_root, version)
     writeJsFunctions(jsFunctions, pc_ble_drive_webusb_root, version)

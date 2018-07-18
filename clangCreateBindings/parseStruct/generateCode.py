@@ -1,4 +1,4 @@
-added_function_defs = set()
+#added_function_defs = set()
 
 
 def generateCppEmscriptenFunctionBinding(pathObject):
