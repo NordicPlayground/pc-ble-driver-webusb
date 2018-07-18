@@ -65,7 +65,7 @@ def setup(version, s_ver):
     source_files_to_parse = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
 
 
-    compArgs    = '-x c++ --std=c++11'.split()
+    compArgs    = '-x c++ --std=c++11 -DNRF_SD_BLE_API_VERSION={ver}'.format(ver=version).split()
 
 
     include_dir = [pc_ble_drive_root+"/include/common/internal",

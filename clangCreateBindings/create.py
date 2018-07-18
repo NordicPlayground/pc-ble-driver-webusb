@@ -7,8 +7,10 @@ def build(version):
 
     if version == 2:
         s_ver = "s130"
-    else:
+    elif version == 3:
         s_ver = "s132"
+    else:
+        s_ver = "ble"
 
     print("Generating code for configuration of softdevice..")
     buildParameterStructs(version, s_ver)
