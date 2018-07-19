@@ -55,8 +55,12 @@ const sd_ble_gattc_attr_info_discover = async (adapter, conn_handle, p_handle_ra
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gattc_attr_info_discover_rsp_dec(buffer, length, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-const sd_ble_gattc_exchange_mtu_request = async (adapter, conn_handle, client_rx_mtu) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gattc_exchange_mtu_request_req_enc(conn_handle, client_rx_mtu, buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gattc_exchange_mtu_request_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
+
+let sd_ble_gattc_exchange_mtu_request;
+if (NRF_SD_BLE_API_VERSION >= 3) {
+    sd_ble_gattc_exchange_mtu_request = async (adapter, conn_handle, client_rx_mtu) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gattc_exchange_mtu_request_req_enc(conn_handle, client_rx_mtu, buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gattc_exchange_mtu_request_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}

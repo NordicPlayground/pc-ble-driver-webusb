@@ -60,14 +60,20 @@ const sd_ble_gatts_sys_attr_set = async (adapter, conn_handle, p_sys_attr_data, 
 };
 const sd_ble_gatts_sys_attr_get = async (adapter, conn_handle, p_sys_attr_data, p_len, flags) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_sys_attr_get_req_enc(conn_handle, p_sys_attr_data, p_len, flags, buffer, length);
-    const decode_function = (buffer, length, result) => {
-        const p_p_sys_attr_data = emscriptenAllocPTP(p_sys_attr_data);
-        const p_p_len = emscriptenAllocPTP(p_len);
-        const apiRes = emscriptenBindings.ble_gatts_sys_attr_get_rsp_dec(buffer, length, p_p_sys_attr_data, p_p_len, result);
-        emscriptenFreePTP(p_p_len);
-        emscriptenFreePTP(p_p_sys_attr_data);
-        return apiRes;
-    };
+
+    let decode_function;
+    if (NRF_SD_BLE_API_VERSION == 2) {
+        decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_sys_attr_get_rsp_dec(buffer, length, p_sys_attr_data, p_len, result);
+    } else {
+        decode_function = (buffer, length, result) => {
+            const p_p_sys_attr_data = emscriptenAllocPTP(p_sys_attr_data);
+            const p_p_len = emscriptenAllocPTP(p_len);
+            const apiRes = emscriptenBindings.ble_gatts_sys_attr_get_rsp_dec(buffer, length, p_p_sys_attr_data, p_p_len, result);
+            emscriptenFreePTP(p_p_len);
+            emscriptenFreePTP(p_p_sys_attr_data);
+            return apiRes;
+        };
+    }
     return encode_decode(adapter, encode_function, decode_function);
 };
 const sd_ble_gatts_initial_user_handle_get = async (adapter, p_handle) => {
@@ -92,8 +98,11 @@ const sd_ble_gatts_attr_get = async (adapter, handle, p_uuid, p_md) => {
     };
     return encode_decode(adapter, encode_function, decode_function);
 };
-const sd_ble_gatts_exchange_mtu_reply = async (adapter, conn_handle, server_rx_mtu) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_exchange_mtu_reply_req_enc(conn_handle, server_rx_mtu, buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_exchange_mtu_reply_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
+let sd_ble_gatts_exchange_mtu_reply;
+if (NRF_SD_BLE_API_VERSION >= 3) {
+    sd_ble_gatts_exchange_mtu_reply = async (adapter, conn_handle, server_rx_mtu) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_exchange_mtu_reply_req_enc(conn_handle, server_rx_mtu, buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_exchange_mtu_reply_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}

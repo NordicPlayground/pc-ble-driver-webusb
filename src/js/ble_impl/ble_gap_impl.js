@@ -1,8 +1,18 @@
-const sd_ble_gap_adv_start = async (adapter, p_adv_params) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_adv_start_req_enc(p_adv_params._getInternal(), buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_adv_start_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
+let sd_ble_gap_adv_start;
+if (NRF_SD_BLE_API_VERSION >= 4) {
+    sd_ble_gap_adv_start = async (adapter, p_adv_params, conn_cfg_tag) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_adv_start_req_enc(p_adv_params._getInternal(), conn_cfg_tag, buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_adv_start_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+} else {
+    sd_ble_gap_adv_start = async (adapter, p_adv_params) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_adv_start_req_enc(p_adv_params._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_adv_start_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}
+
 const sd_ble_gap_device_name_get = async (adapter, p_dev_name, p_len) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gap_device_name_get_req_enc(p_dev_name, p_len, buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_device_name_get_rsp_dec(buffer, length, p_dev_name, p_len, result);
@@ -53,36 +63,55 @@ const sd_ble_gap_ppcp_get = async (adapter, p_conn_params) => {
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_ppcp_get_rsp_dec(buffer, length, p_conn_params._getInternal(), result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-const sd_ble_gap_address_get = async (adapter, p_addr) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_addr_get_req_enc(p_addr._getInternal(), buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_addr_get_rsp_dec(buffer, length, p_addr._getInternal(), result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
-const sd_ble_gap_address_set = async (adapter, p_addr) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_addr_set_req_enc(p_addr._getInternal(), buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_addr_set_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
-const sd_ble_gap_whitelist_set = async (adapter, pp_wl_addrs, len) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_whitelist_set_req_enc(pp_wl_addrs._getInternal(), len, buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_whitelist_set_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
-const sd_ble_gap_device_identities_set = async (adapter, pp_id_keys, pp_local_irks, len) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_device_identities_set_req_enc(pp_id_keys._getInternal(), pp_local_irks._getInternal(), len, buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_device_identities_set_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
-const sd_ble_gap_privacy_set = async (adapter, p_privacy_params) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_privacy_set_req_enc(p_privacy_params._getInternal(), buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_privacy_set_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
-const sd_ble_gap_privacy_get = async (adapter, p_privacy_params) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_privacy_set_get_enc(p_privacy_params._getInternal(), buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_privacy_get_rsp_dec(buffer, length, p_privacy_params, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
+
+let sd_ble_gap_address_get, sd_ble_gap_address_set, sd_ble_gap_addr_get, sd_ble_gap_addr_set, sd_ble_gap_whitelist_set, sd_ble_gap_device_identities_set, sd_ble_gap_privacy_set, sd_ble_gap_privacy_get;
+
+if (NRF_SD_BLE_API_VERSION <= 2) {
+    sd_ble_gap_address_get = async (adapter, p_addr) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_address_get_req_enc(p_addr._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_address_get_rsp_dec(buffer, length, p_addr._getInternal(), result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+    sd_ble_gap_address_set = async (adapter, addr_cycle_mode, p_addr) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_address_set_req_enc(addr_cycle_mode, p_addr._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_address_set_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}
+
+if (NRF_SD_BLE_API_VERSION >= 3) {
+    sd_ble_gap_addr_get = async (adapter, p_addr) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_addr_get_req_enc(p_addr._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_addr_get_rsp_dec(buffer, length, p_addr._getInternal(), result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+    sd_ble_gap_addr_set = async (adapter, p_addr) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_addr_set_req_enc(p_addr._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_addr_set_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+    sd_ble_gap_whitelist_set = async (adapter, pp_wl_addrs, len) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_whitelist_set_req_enc(pp_wl_addrs._getInternal(), len, buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_whitelist_set_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+    sd_ble_gap_device_identities_set = async (adapter, pp_id_keys, pp_local_irks, len) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_device_identities_set_req_enc(pp_id_keys._getInternal(), pp_local_irks._getInternal(), len, buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_device_identities_set_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+    sd_ble_gap_privacy_set = async (adapter, p_privacy_params) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_privacy_set_req_enc(p_privacy_params._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_privacy_set_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+    sd_ble_gap_privacy_get = async (adapter, p_privacy_params) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_privacy_set_get_enc(p_privacy_params._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_privacy_get_rsp_dec(buffer, length, p_privacy_params, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}
+
 const sd_ble_gap_adv_stop = async (adapter) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gap_adv_stop_req_enc(buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_adv_stop_rsp_dec(buffer, length, result);
@@ -128,11 +157,22 @@ const sd_ble_gap_scan_stop = async (adapter) => {
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_scan_stop_rsp_dec(buffer, length, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-const sd_ble_gap_connect = async (adapter, pAddr, pScanParams, pConnParams) => {
-    const encode_function = (buffer, length) => emscriptenBindings.ble_gap_connect_req_enc(pAddr._getInternal(), pScanParams._getInternal(), pConnParams._getInternal(), buffer, length);
-    const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_connect_rsp_dec(buffer, length, result);
-    return encode_decode(adapter, encode_function, decode_function);
-};
+
+let sd_ble_gap_connect;
+if (NRF_SD_BLE_API_VERSION >= 4) {
+    sd_ble_gap_connect = async (adapter, pAddr, pScanParams, pConnParams, conn_cfg_tag) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_connect_req_enc(pAddr._getInternal(), pScanParams._getInternal(), pConnParams._getInternal(), conn_cfg_tag, buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_connect_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+} else {
+    sd_ble_gap_connect = async (adapter, pAddr, pScanParams, pConnParams) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_connect_req_enc(pAddr._getInternal(), pScanParams._getInternal(), pConnParams._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_connect_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}
+
 const sd_ble_gap_connect_cancel = async (adapter) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gap_connect_cancel_req_enc(buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_connect_cancel_rsp_dec(buffer, length, result);
@@ -186,5 +226,19 @@ const sd_ble_gap_keypress_notify = async (adapter, conn_handle, kp_not) => {
     return encode_decode(adapter, encode_function, decode_function);
 };
 
-/* sd_ble_gap_phy_update: Api version >= 5 */
-/* sd_ble_gap_data_length_update: Api version >= 4 */
+let sd_ble_gap_phy_update, sd_ble_gap_data_length_update;
+
+if (NRF_SD_BLE_API_VERSION >= 5) {
+    sd_ble_gap_phy_update = async (adapter, conn_handle, p_gap_phys) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_phy_update_req_enc(conn_handle, p_gap_phys._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_phy_update_rsp_dec(buffer, length, result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}
+if (NRF_SD_BLE_API_VERSION >= 4) {
+    sd_ble_gap_data_length_update = async (adapter, conn_handle, p_dl_params, p_dl_limitation) => {
+        const encode_function = (buffer, length) => emscriptenBindings.ble_gap_data_length_update_req_enc(conn_handle, p_dl_params._getInternal(), p_dl_limitation._getInternal(), buffer, length);
+        const decode_function = (buffer, length, result) => emscriptenBindings.ble_gap_data_length_update_rsp_dec(buffer, length, p_dl_limitation._getInternal(), result);
+        return encode_decode(adapter, encode_function, decode_function);
+    };
+}
