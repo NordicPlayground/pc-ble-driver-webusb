@@ -91,21 +91,27 @@ class SerializationTransport {
         this.didTimeout = false;
         let sendTimeoutFunc = () => {
             this.didTimeout = true;
-            const dataReadyEvent = new CustomEvent('dataReadyEvent', { detail: { status: NRF_ERROR_INTERNAL } });
-            dispatchEvent(dataReadyEvent);
+            if (!this.rspReceived) {
+                const dataReadyEvent = new CustomEvent('dataReadyEvent', { detail: { status: NRF_ERROR_INTERNAL } });
+                dispatchEvent(dataReadyEvent);
+            }
         };
-
-        const errCode = await this.nextTransportLayer.send(commandBuffer);
-        this.timeoutEvent = setTimeout(sendTimeoutFunc.bind(this), 3000);
-
-        return new Promise(resolve => {
+        const rspPromise = new Promise(resolve => {
             const dataRcvdResolve = evt => {
-                removeEventListener('dataReadyEvent', boundDataRcvdResolve);
+                removeEventListener('dataReadyEvent', dataRcvdResolve);
                 resolve(evt.detail.status);
             };
-            let boundDataRcvdResolve = dataRcvdResolve.bind(this);
-            addEventListener('dataReadyEvent', boundDataRcvdResolve);
+            addEventListener('dataReadyEvent', dataRcvdResolve);
         });
+
+        this.timeoutEvent = setTimeout(sendTimeoutFunc, this.responseTimeout);
+        const errCode = await this.nextTransportLayer.send(commandBuffer);
+        if (errCode !== NRF_SUCCESS) {
+            const dataReadyEvent = new CustomEvent('dataReadyEvent', { detail: { status: errCode } });
+            dispatchEvent(dataReadyEvent);
+        }
+
+        return rspPromise;
     }
 
     readHandler(data, length) {
