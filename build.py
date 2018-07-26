@@ -9,6 +9,7 @@ generateBindings = True
 bundleBindings = True
 compileLibrary = True
 SD_VERS = []
+PROJECT_DIR = None
 
 argn = 1
 EMSCRIPTEN_ASSERTIONS = 0
@@ -31,6 +32,10 @@ while argn < len(sys.argv):
         continue
     elif (arg == "-sd-ver"):
         SD_VERS = [int(v) for v in sys.argv[argn].strip().split(",")]
+        argn += 1
+        continue
+    elif (arg == "-dir"):
+        PROJECT_DIR = sys.argv[argn]
         argn += 1
         continue
     elif (arg == "-emscripten-assert"):
@@ -97,24 +102,32 @@ if compileLibrary:
     print("Compiling to LLVM...")
     os.system(make)
 
-if bundleBindings:
-    os.system("npm install -g uglify-es")
+#if bundleBindings:
+    #os.system("npm install -g uglify-es")
+    #os.system("npm install -g browserify")
 
 for ver in SD_VERS:
-    emscripten = """em++ -O2 --js-opts 1 -s WASM=1 -o build/v{ver}/pc_ble_driver_sd_api_v{ver}.js libpc_ble_driver_static_sd_api_v{ver}.a -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'getValue', 'setValue', 'cwrap', 'writeArrayToMemory']" """.format(ver=ver)
+    emscripten = """em++ -O2 --js-opts 1 -s WASM=1 -s BINARYEN_TRAP_MODE='clamp' -o build/v{ver}/pc_ble_driver_sd_api_v{ver}.js libpc_ble_driver_static_sd_api_v{ver}.a -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'getValue', 'setValue', 'cwrap', 'writeArrayToMemory']" """.format(ver=ver)
 
-    createBundle = """uglifyjs src/js/adapter_internal.js src/js/ble_common.js src/js/gattc.js src/js/sd_rpc_types.js \
+    createBundle = """uglifyjs --define NRF_SD_BLE_API_VERSION={ver} src/js/adapter_internal.js src/js/ble_common.js src/js/gattc.js src/js/sd_rpc_types.js \
     src/js/bindings/sd_api_v{ver}/bleEvtStruct.js src/js/bindings/sd_api_v{ver}/bleSDAttributeStructs.js src/js/bindings/sd_api_v{ver}/emscripten.js \
     src/js/transport/transport.js src/js/transport/h5.js src/js/transport/h5_transport.js src/js/transport/h5_transport_exit_criterias.js \
     src/js/transport/serial.js src/js/transport/serialization_transport.js src/js/transport/slip.js src/js/transport/webusb_interface.js \
     src/js/ble_impl/common.js src/js/ble_impl/ble_gap_impl.js src/js/ble_impl/ble_gattc_impl.js src/js/ble_impl/ble_gatts_impl.js src/js/ble_impl/ble_impl.js \
     --compress -ecma 8 -o build/v{ver}/bundle.js""".format(ver=ver)
 
-    if bundleBindings:
-        print("Processing transport and encode/decode..")
-        os.system(createBundle)
+    browserify = """browserify {dir}/index.js -o {dir}/bundle.js""".format(dir=PROJECT_DIR)
+    uglify = """uglifyjs build/v{ver}/pc_ble_driver_sd_api_v{ver}.js {dir}/bundle.js --compress -ecma 8 -o {dir}/bundle.js""".format(dir=PROJECT_DIR, ver=ver)
 
     if compileLibrary:
         print("Compiling LLVM to WASM. (build/v{})\n".format(ver))
         os.system(emscripten)
         os.remove("libpc_ble_driver_static_sd_api_v{}.a".format(ver))
+
+    if bundleBindings:
+        if PROJECT_DIR is None:
+            print("No project dir specified (-dir examples/dfu/sd_v5 [with index.js file])")
+        else:
+            print("Processing transport and encode/decode..")
+            os.system(browserify)
+            os.system(uglify)
