@@ -117,12 +117,12 @@ def build(version, s_ver):
     source_code += "#ifdef __cplusplus\n}\n#endif"
 
     js_source_code = ""
-    js_source_code += "emscriptenBindings = {{{}}}".format(",\n".join(jsFunctions))
+    js_source_code += "module.exports.emscriptenBindings = {{{}}}".format(",\n".join(jsFunctions))
 
 
     print("Wrapped {} functions".format(len(functions)))
 
     with open(pc_ble_drive_webusb_root+"/src/sd_api_v{}/bindings/emscripten_bindings.cpp".format(version), "w") as file:
         file.write(source_code)
-    with open(pc_ble_drive_webusb_root+"/src/js/bindings/sd_api_v{}/emscripten.js".format(version), "w") as file:
+    with open(pc_ble_drive_webusb_root+"/src/js/bindings/emscripten.js", "w") as file:
         file.write(js_source_code)

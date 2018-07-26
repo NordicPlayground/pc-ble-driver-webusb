@@ -14,9 +14,9 @@ def filePointers():
     '''
     global headers
     idx = clang.cindex.Index.create()
-    for filename in parse_files:
+    for filename, path in parse_files:
         headers.append(filename)
-        yield idx.parse(file_root+filename, args=compArgs)
+        yield idx.parse(path+filename, args=compArgs)
 
 parsedStructs = set()
 
@@ -63,6 +63,7 @@ def createStructNode(structParent):
     return structNode
 
 def clangIsStruct(func):
+    #print(func)
     return clang.cindex.CursorKind.TYPEDEF_DECL == func
 
 
@@ -70,7 +71,7 @@ def clangIsStruct(func):
 def parseAll(parsedStructs):
     for tu in filePointers():
         for c in tu.cursor.walk_preorder():
-            if(clangIsStruct(c.kind) and c.spelling.startswith("ble") and c.spelling.endswith("_t")):
+            if(clangIsStruct(c.kind) and "ble_" in c.spelling and c.spelling.endswith("_t")): #c.spelling.startswith("ble")
                 '''
                     Parsed node is a C function with a name that starts with "ble"
                 '''
@@ -90,7 +91,8 @@ def setup(version, s_ver):
     pc_ble_drive_root = pc_ble_drive_webusb_root + "/pc-ble-driver"
 
     sdk_root = pc_ble_drive_root+"/src/sd_api_v{}/sdk".format(version)
-    source_files_to_parse = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
+    source_files_to_parse_headers = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
+    source_files_to_parse_serializers = os.listdir("{}/components/serialization/application/codecs/s132/serializers".format(sdk_root))
     headers = []
 
     compArgs    = '-x c++ --std=c++11 -DNRF_SD_BLE_API_VERSION={ver}'.format(ver=version).split()
@@ -114,8 +116,11 @@ def setup(version, s_ver):
 
 
     parse_files = []
-    for filename in source_files_to_parse:
-        if filename.endswith(".h"):
-            parse_files.append(filename)
+    for filename in source_files_to_parse_headers:
+        if filename.endswith(".h") and "ble_" in filename:
+            parse_files.append((filename, file_root))
+    for filename in source_files_to_parse_serializers:
+        if filename.endswith(".h") and "ble_" in filename:
+            parse_files.append((filename, "{}/components/serialization/application/codecs/s132/serializers/".format(sdk_root)))
 
     return pc_ble_drive_webusb_root, headers

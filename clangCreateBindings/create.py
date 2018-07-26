@@ -21,3 +21,5 @@ def build(version):
     print("Generating code to call encode/code api functions")
     buildSdEncodeDecode(version, s_ver)
     print()
+    with open('src/js/bindings/version.js', 'w') as file:
+        file.write("module.exports = {{ NRF_SD_BLE_API_VERSION: {ver} }};\n".format(ver=version))

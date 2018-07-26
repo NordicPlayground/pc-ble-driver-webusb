@@ -31,10 +31,26 @@ def generateJsEmscriptenFunctionBinding(pathObject):
     jsFuncName = pathstr.replace("->",".").replace(pathObject.rootType + "_evt_data", pathObject.rootType)
     cwrap = ""
 
+    mask = ""
+    shift =">>>0"
+    if not pathObject.arrayType and not pathObject.pointerType and not pathObject.structPointer:
+        if pathObject.returnType == "uint8_t":
+            mask = "&0xFF"
+        elif pathObject.returnType == "uint16_t":
+            mask = "&0xFFFF"
+        elif pathObject.returnType == "int8_t":
+            mask = "&0xFF"
+            shift =">>0"
+        elif pathObject.returnType == "int16_t":
+            mask = "&0xFFFF"
+            shift =">>0"
+        elif pathObject.returnType == "int32_t":
+            shift =">>0"
+
     if pathObject.arrayType: # Index argument specified
-        cwrap += "Module.cwrap('{}','number', ['number', 'number'])".format(cppFuncName)
+        cwrap += "(_1, _2) => (Module.ccall('{}','number', ['number', 'number'], [_1, _2]){}){}".format(cppFuncName, shift, mask)
     else:
-        cwrap += "Module.cwrap('{}','number', ['number'])".format(cppFuncName)
+        cwrap += "_1 => (Module.ccall('{}','number', ['number'], [_1]){}){}".format(cppFuncName, shift, mask)
 
     str = "'"+jsFuncName+"'" + ": " +cwrap
     return str
@@ -76,11 +92,11 @@ def writeCppFunctions(functions, dir, version):
         print("Wrote {}/src/sd_api_v{}/bindings/ble_evt_struct.cpp".format(dir, version))
 
 def writeJsFunctions(functions, dir, version):
-    source_code ="""let ble_event_struct = {{
+    source_code ="""module.exports.ble_event_struct = {{
     {}
     }}
     """.format(functions)
 
-    with open(dir+"/src/js/bindings/sd_api_v{}/bleEvtStruct.js".format(version), "w") as file:
+    with open(dir+"/src/js/bindings/bleEvtStruct.js", "w") as file:
         file.write(source_code)
-        print("Wrote {}/src/js/bindings/sd_api_v{}/bleEvtStruct.js".format(dir, version))
+        print("Wrote {}/src/js/bindings/bleEvtStruct.js".format(dir))

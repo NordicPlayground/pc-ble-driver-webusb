@@ -11,12 +11,12 @@ class StructData:
 """EMSCRIPTEN_KEEPALIVE
 {dataType} *{dataType}_NEW()
 {{
-    return ({dataType}*)(malloc(sizeof({dataType})));
+    return ({dataType}*)(calloc(1, sizeof({dataType})));
 }}
 """.format(dataType=self.dataType)
 
     def generateNewJs(self):
-        return "Module.ccall('{dataType}_NEW', 'number', [], [])".format(dataType=self.dataType)
+        return "Module.ccall('{dataType}_NEW', 'number', [], [])>>>0".format(dataType=self.dataType)
 
     def generateDelete(self):
         return \
@@ -33,14 +33,14 @@ void {dataType}_DELETE({dataType} *structData)
     def generateSizeof(self):
         return \
 """EMSCRIPTEN_KEEPALIVE
-size_t {dataType}_SIZEOF({dataType} *structData)
+uint32_t {dataType}_SIZEOF({dataType} *structData)
 {{
     return sizeof(structData);
 }}
 """.format(dataType=self.dataType)
 
     def generateSizeofJs(self):
-        return "Module.ccall('{dataType}_SIZEOF', 'number', ['number'], [this._EmscriptenInternalData])".format(dataType=self.dataType)
+        return "Module.ccall('{dataType}_SIZEOF', 'number', ['number'], [this._EmscriptenInternalData])>>>0".format(dataType=self.dataType)
 
     def serialize(self):
         cppCode = ""
@@ -87,7 +87,8 @@ size_t {dataType}_SIZEOF({dataType} *structData)
         return cppCode, jsCode
 
 
-
+signedTypes = {'int8_t':"&0xFF", 'int16_t':"&0xFFFF", 'int32_t':""};
+unsignedTypes = {'uint8_t':"&0xFF", 'uint16_t':"&0xFFFF", 'uint32_t':""};
 
 class StructChild:
     def __init__(self, parentType, datatype, name, isPointer, isArray, isBitfield):
@@ -119,6 +120,7 @@ parentType=self.parentType,
 name=self.name)
 
     def generateGetter(self, retAddr):
+
         return \
 """EMSCRIPTEN_KEEPALIVE
 {dataType} {inPointer}{parentType}_GET_{addrof}{name}({parentType} *structData)
@@ -136,16 +138,26 @@ shouldBeIndexed="[0]"*self.isArray,
 unionName=self.unionName)
 
     def generateGetterJs(self, retAddr):
+        sign = ">>>0"
+        mask = ""
+        if (not retAddr and not self.isPointer):
+            if (self.dataType in signedTypes):
+                sign = ">>0"
+                mask = signedTypes[self.dataType]
+            elif (self.dataType in unsignedTypes):
+                mask = unsignedTypes[self.dataType]
         return \
-"""() => Module.ccall('{parentType}_GET_{addrof}{name}', 'number', ['number'], [this._EmscriptenInternalData])""".format(
+"""() => (Module.ccall('{parentType}_GET_{addrof}{name}', 'number', ['number'], [this._EmscriptenInternalData]){sign}){mask}""".format(
 parentType=self.parentType,
 name=self.name,
-addrof="ADDRESSOF_"*retAddr)
+addrof="ADDRESSOF_"*retAddr,
+mask=mask,
+sign=sign)
 
     def generateLength(self):
         return \
 """EMSCRIPTEN_KEEPALIVE
-size_t {parentType}_LENGTH_{name}({parentType} *structData)
+uint32_t {parentType}_LENGTH_{name}({parentType} *structData)
 {{
     return sizeof(structData->{unionName}{name})/sizeof(structData->{name}[0]);
 }}
@@ -156,7 +168,7 @@ unionName=self.unionName)
 
     def generateLengthJs(self):
         return \
-"""() => Module.ccall('{parentType}_LENGTH_{name}', 'number', ['number'], [this._EmscriptenInternalData])""".format(
+"""() => Module.ccall('{parentType}_LENGTH_{name}', 'number', ['number'], [this._EmscriptenInternalData])>>>0""".format(
 parentType=self.parentType,
 name=self.name)
 
