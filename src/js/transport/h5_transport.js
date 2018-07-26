@@ -1,3 +1,9 @@
+const { NRF_SUCCESS, NRF_ERROR_TIMEOUT, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_STATE, sd_rpc_app_status_t, sd_rpc_log_severity_t } = require('../sd_rpc_types');
+const { Transport } = require('./transport');
+const { h5Encode, h5Decode, h5_pkt_type_t, control_pkt_type } = require('./h5');
+const { slipEncode, slipDecode } = require('./slip');
+const { StartExitCriterias, UninitializedExitCriterias, InitializedExitCriterias, ActiveExitCriterias, ResetExitCriterias } = require('./h5_transport_exit_criterias');
+
 const h5_state = Object.freeze({
     STATE_START: 0,
     STATE_RESET: 1,
@@ -12,6 +18,24 @@ const NON_ACTIVE_STATE_TIMEOUT = 250;
 const PACKET_RETRANSMISSIONS = 6;
 const OPEN_WAIT_TIMEOUT = 5000;   // Duration to wait for state ACTIVE after open is called
 const RESET_WAIT_DURATION = 300;
+
+const syncFirstByte = 0x01;
+const syncSecondByte = 0x7E;
+const syncRspFirstByte = 0x02;
+const syncRspSecondByte = 0x7D;
+const syncConfigFirstByte = 0x03;
+const syncConfigSecondByte = 0xFC;
+const syncConfigRspFirstByte = 0x04;
+const syncConfigRspSecondByte = 0x7B;
+const syncConfigField = 0x11;
+
+const pkt_pattern = {};
+pkt_pattern[control_pkt_type.CONTROL_PKT_RESET] = new Uint8Array([]);
+pkt_pattern[control_pkt_type.CONTROL_PKT_ACK] = new Uint8Array([]);
+pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC] = new Uint8Array([syncFirstByte, syncSecondByte]);
+pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_RESPONSE] = new Uint8Array([syncRspFirstByte, syncRspSecondByte]);
+pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_CONFIG] = new Uint8Array([syncConfigFirstByte, syncConfigSecondByte, syncConfigField]);
+pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_CONFIG_RESPONSE] = new Uint8Array([syncConfigRspFirstByte, syncConfigRspSecondByte, syncConfigField]);
 
 class H5Transport extends Transport {
     constructor(nextTransportLayer, retransmissionInterval) {
@@ -541,20 +565,6 @@ class H5Transport extends Transport {
 }
 
 
-const syncFirstByte = 0x01;
-const syncSecondByte = 0x7E;
-const syncRspFirstByte = 0x02;
-const syncRspSecondByte = 0x7D;
-const syncConfigFirstByte = 0x03;
-const syncConfigSecondByte = 0xFC;
-const syncConfigRspFirstByte = 0x04;
-const syncConfigRspSecondByte = 0x7B;
-const syncConfigField = 0x11;
-
-const pkt_pattern = {};
-pkt_pattern[control_pkt_type.CONTROL_PKT_RESET] = new Uint8Array([]);
-pkt_pattern[control_pkt_type.CONTROL_PKT_ACK] = new Uint8Array([]);
-pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC] = new Uint8Array([syncFirstByte, syncSecondByte]);
-pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_RESPONSE] = new Uint8Array([syncRspFirstByte, syncRspSecondByte]);
-pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_CONFIG] = new Uint8Array([syncConfigFirstByte, syncConfigSecondByte, syncConfigField]);
-pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_CONFIG_RESPONSE] = new Uint8Array([syncConfigRspFirstByte, syncConfigRspSecondByte, syncConfigField]);
+module.exports = {
+    H5Transport,
+};

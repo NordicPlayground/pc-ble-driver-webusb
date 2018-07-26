@@ -1,9 +1,13 @@
+const { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_log_severity_t } = require('../sd_rpc_types');
+const { emscriptenBindings } = require('../bindings/emscripten');
+
 const serialization_pkt_type_t = Object.freeze({
     SERIALIZATION_COMMAND: 0,
     SERIALIZATION_RESPONSE: 1,
     SERIALIZATION_EVENT: 2,
 });
 
+let nextId = 0;
 
 class SerializationTransport {
 
@@ -26,6 +30,7 @@ class SerializationTransport {
         addEventListener('eventDataReadyEvent', this.boundEventHandler);
 
         this.eventQueue = [];
+        this.ID = nextId++;
 
     }
     async open(statusCallback, eventCallback, logCallback) {
@@ -69,12 +74,13 @@ class SerializationTransport {
             if (errCode !== NRF_SUCCESS) {
                 this.logCallback(sd_rpc_log_severity_t.SD_RPC_LOG_DEBUG, 'Could not decode event');
             }
+            Module._free(possibleEventLength);
             Module._free(event);
         }
         this.eventQueue.length = 0;
     }
 
-    async send(cmdBuffer, cmdLength, rspBuffer, rspLength){
+    async send(cmdBuffer, cmdLength, rspBuffer, rspLength) {
         this.rspReceived = false;
         this.responseBuffer = rspBuffer;
         this.responseLength = rspLength;
@@ -89,7 +95,7 @@ class SerializationTransport {
         commandBuffer = new Uint8Array(commandBuffer);
 
         this.didTimeout = false;
-        let sendTimeoutFunc = () => {
+        const sendTimeoutFunc = () => {
             this.didTimeout = true;
             if (!this.rspReceived) {
                 const dataReadyEvent = new CustomEvent('dataReadyEvent', { detail: { status: NRF_ERROR_INTERNAL } });
@@ -136,7 +142,11 @@ class SerializationTransport {
             const dataReadyEvent = new CustomEvent('eventDataReadyEvent', { detail: { status:NRF_SUCCESS } });
             dispatchEvent(dataReadyEvent);
         } else {
-            this.logCallback(SD_RPC_LOG_WARNING, 'Unknown Nordic Semiconductor vendor specific packet received');
+            this.logCallback(sd_rpc_log_severity_t.SD_RPC_LOG_WARNING, 'Unknown Nordic Semiconductor vendor specific packet received');
         }
     }
 }
+
+module.exports = {
+    SerializationTransport,
+};

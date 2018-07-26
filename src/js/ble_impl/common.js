@@ -6,3 +6,8 @@ const emscriptenAllocPTP = pointer => {
 const emscriptenFreePTP = pointerToPointer => {
     Module._free(pointerToPointer);
 }
+
+module.exports = {
+    emscriptenAllocPTP,
+    emscriptenFreePTP,
+};

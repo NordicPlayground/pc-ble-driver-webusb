@@ -2,8 +2,7 @@ const serial = {};
 
 const configureJLink = (device, controlData) => new Promise(resolve => {
     if (device.configuration === null) {
-        device.selectConfiguration(1)
-        .then(() => resolve());
+        resolve(device.selectConfiguration(1));
     }
     resolve();
 })
@@ -27,8 +26,7 @@ const configureJLink = (device, controlData) => new Promise(resolve => {
 
 const configureSerial = (device, controlData) => new Promise(resolve => {
     if (device.configuration === null) {
-        device.selectConfiguration(1)
-        .then(() => resolve());
+        resolve(device.selectConfiguration(1));
     }
     resolve();
 })
@@ -113,3 +111,7 @@ const configureDevice = (device, controlData, that) => new Promise((resolve, rej
         this.device_.transferOut(this.transferOut, data);
     };
 })();
+
+module.exports = {
+    serial,
+};

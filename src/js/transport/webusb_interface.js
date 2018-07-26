@@ -1,3 +1,7 @@
+const { Transport } = require('./transport');
+const { serial } = require('./serial');
+const { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_log_severity_t, sd_rpc_app_status_t } = require('../sd_rpc_types');
+
 class WebusbInterface extends Transport {
 
     constructor(baudRate = 115200) {
@@ -10,7 +14,7 @@ class WebusbInterface extends Transport {
 
         return new Promise(resolve => {
             serial.requestPort().then(selectedPort => {
-                console.log(this.baudRate)
+                console.log(this.baudRate);
                 this.port = selectedPort;
                 this.webusbConnect(resolve);
             }).catch(error => {
@@ -20,7 +24,7 @@ class WebusbInterface extends Transport {
     }
 
     webusbConnect(resolve) {
-        this.log('Web usb is connecting..')
+        this.log('Web usb is connecting..');
         this.port.onReceiveError = error => {
             console.error(error);
             resolve(NRF_ERROR_INTERNAL);
@@ -34,7 +38,7 @@ class WebusbInterface extends Transport {
 
             resolve(NRF_SUCCESS); // Connected!
         }, error => {
-            this.log(error)
+            this.log(error);
             resolve(NRF_ERROR_INTERNAL);
         });
     }
@@ -63,3 +67,6 @@ class WebusbInterface extends Transport {
         }
     }
 }
+module.exports = {
+    WebusbInterface,
+};

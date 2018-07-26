@@ -95,3 +95,11 @@ class ResetExitCriterias extends ExitCriterias {
         this.resetSent = false;
     }
 }
+
+module.exports = {
+    StartExitCriterias,
+    UninitializedExitCriterias,
+    InitializedExitCriterias,
+    ActiveExitCriterias,
+    ResetExitCriterias,
+};

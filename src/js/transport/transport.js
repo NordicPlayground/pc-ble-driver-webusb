@@ -1,3 +1,5 @@
+const { NRF_SUCCESS } = require('../sd_rpc_types');
+
 class Transport {
     open(statusCallback, dataCallback, logCallback) {
         this.statusCallback = statusCallback;
@@ -7,3 +9,6 @@ class Transport {
         return NRF_SUCCESS;
     }
 }
+module.exports = {
+    Transport,
+};

@@ -1,3 +1,5 @@
+const { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_app_status_t } = require('./sd_rpc_types');
+
 const SER_HAL_TRANSPORT_MAX_PKT_SIZE = 384;
 
 async function encode_decode(adapter, encodeFunction, decodeFunction) {
@@ -70,9 +72,14 @@ async function encode_decode(adapter, encodeFunction, decodeFunction) {
     Module._free(rxBufferLength);
 
     if (adapter.isInternalError(errCode)) {
+        throw errCode;
         const errorMessage = `Not able to decode packet. Code #${errCode}`;
         adapter.statusHandler(sd_rpc_app_status_t.PKT_DECODE_ERROR, errorMessage);
         return NRF_ERROR_INTERNAL;
     }
     return resultCodeValue;
 }
+
+module.exports = {
+    encode_decode,
+};

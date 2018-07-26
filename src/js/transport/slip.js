@@ -1,3 +1,5 @@
+const { NRF_SUCCESS, NRF_ERROR_INVALID_DATA } = require('../sd_rpc_types');
+
 const SLIP_END = 0xC0;
 const SLIP_ESC = 0xDB;
 const SLIP_ESC_END = 0xDC;
@@ -25,7 +27,7 @@ function slipEncode(inPacket, outPacket) {
 function slipDecode(packet, outPacket) {
     for (let i = 0; i < packet.length; i += 1) {
         if (packet[i] === SLIP_END) {
-            continue;
+            continue; // eslint-disable-line no-continue
         } else if (packet[i] === SLIP_ESC) {
             i += 1;
             if (packet[i] === SLIP_ESC_END) {
@@ -41,3 +43,8 @@ function slipDecode(packet, outPacket) {
     }
     return NRF_SUCCESS;
 }
+
+module.exports = {
+    slipEncode,
+    slipDecode,
+};

@@ -1,3 +1,5 @@
+const { NRF_SUCCESS } = require('./sd_rpc_types');
+
 class AdapterInternal {
     constructor(serializationTransport) {
         this.eventCallback = null;
@@ -46,3 +48,7 @@ class AdapterInternal {
         return this.transport.close();
     }
 }
+
+module.exports = {
+    AdapterInternal,
+};

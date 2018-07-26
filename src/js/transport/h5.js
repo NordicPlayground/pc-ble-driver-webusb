@@ -1,3 +1,5 @@
+const { NRF_SUCCESS, NRF_ERROR_INVALID_DATA } = require('../sd_rpc_types');
+
 const control_pkt_type = Object.freeze({
     CONTROL_PKT_RESET: 0,
     CONTROL_PKT_ACK: 1,
@@ -33,8 +35,7 @@ const payloadLengthSecondNibbleMask = 0x0FF0;
 const payloadLengthOffset = 4;
 const H5_HEADER_LENGTH = 4;
 
-function calculateHeaderChecksum(header)
-{
+function calculateHeaderChecksum(header) {
     let checksum = header[0];
     checksum += header[1];
     checksum += header[2];
@@ -138,3 +139,11 @@ function h5Decode(slipPayload, h5Payload, ref, _dataIntegrity, _payloadLength, _
     }
     return NRF_SUCCESS;
 }
+
+module.exports = {
+    control_pkt_type,
+    h5_pkt_type_t,
+    add_h5_header,
+    h5Encode,
+    h5Decode,
+};
