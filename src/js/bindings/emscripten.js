@@ -1,4 +1,5 @@
-emscriptenBindings = {'ble_tx_packet_count_get_req_enc': Module.cwrap('emscripten_ble_tx_packet_count_get_req_enc', 'number', ['number', 'number', 'number', 'number']),
+/*global Module */
+module.exports.emscriptenBindings = {'ble_tx_packet_count_get_req_enc': Module.cwrap('emscripten_ble_tx_packet_count_get_req_enc', 'number', ['number', 'number', 'number', 'number']),
 'ble_tx_packet_count_get_rsp_dec': Module.cwrap('emscripten_ble_tx_packet_count_get_rsp_dec', 'number', ['number', 'number', 'number', 'number']),
 'ble_uuid_encode_req_enc': Module.cwrap('emscripten_ble_uuid_encode_req_enc', 'number', ['number', 'number', 'number', 'number', 'number']),
 'ble_uuid_encode_rsp_dec': Module.cwrap('emscripten_ble_uuid_encode_rsp_dec', 'number', ['number', 'number', 'number', 'number', 'number']),

@@ -1,7 +1,8 @@
-const { ble_gattc_write_params_t } = require('./bindings/bleSDAttributeStructs');
-const { sd_ble_gattc_write, sd_ble_gattc_read } = require('./ble_impl/ble_gattc_impl');
+/*global Module */
+import { ble_gattc_write_params_t } from './bindings/bleSDAttributeStructs';
+import { sd_ble_gattc_write, sd_ble_gattc_read } from './ble_impl/ble_gattc_impl';
 
-const { NRF_SUCCESS } = require('./sd_rpc_types');
+import { NRF_SUCCESS } from './sd_rpc_types';
 
 const servicesForConnection = {};
 const characteristicHandleToService = {};
@@ -86,7 +87,7 @@ class GattcCharacteristic {
                         resolve();
                     }
                 };
-                addEventListener('gattcWriteResponse', gotRspCb);
+                this.adapter.on('gattcWriteResponse', gotRspCb);
                 sd_ble_gattc_write(this.adapter, this.connection, writeParams)
                 .then(res => {
                     writeParams.delete();
@@ -101,13 +102,13 @@ class GattcCharacteristic {
             return Promise.race([
                 new Promise((resolve, reject) => {
                     const txCompleteHandler = txCompleteDevice => {
-                        if (device.connectionHandle === txCompleteDevice.connectionHandle) {
-                            removeEventListener('txComplete', txCompleteHandler);
+                        if (this.connection === txCompleteDevice.detail.connectionHandle) {
+                            this.adapter.removeListener('txComplete', txCompleteHandler);
                             clearTimeout(timeoutId);
                             resolve();
                         }
                     };
-                    addEventListener('txComplete', txCompleteHandler);
+                    this.adapter.on('txComplete', txCompleteHandler);
                     sd_ble_gattc_write(this.adapter, this.connection, writeParams)
                     .then(res => {
                         writeParams.delete();
@@ -146,7 +147,7 @@ class GattcDescriptor {
     }
 }
 
-module.exports = {
+/*module.exports =*/ export {
     GattcService,
     GattcCharacteristic,
     GattcDescriptor,

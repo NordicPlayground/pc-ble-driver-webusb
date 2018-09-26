@@ -30,12 +30,12 @@ const configureSerial = (device, controlData) => new Promise(resolve => {
     }
     resolve();
 })
-    .then(() => device.claimInterface(0))
-    .then(() => device.claimInterface(1))
+    //.then(() => device.claimInterface(0))
+    //.then(() => device.claimInterface(1))
     .then(() => device.claimInterface(2))
-    .then(() => device.selectAlternateInterface(1, 0))
+    //.then(() => device.selectAlternateInterface(1, 0))
     .then(() => device.selectAlternateInterface(2, 0))
-    .then(() => device.controlTransferOut({
+    /*.then(() => device.controlTransferOut({
         requestType: 'class',
         recipient: 'interface',
         request: 0x20,
@@ -53,7 +53,7 @@ const configureSerial = (device, controlData) => new Promise(resolve => {
         recipient: 'interface',
         request: 0x21,
         value: 0x00,
-        index: 0x01 }, 7));
+        index: 0x01 }, 7));*/
 
 const configureDevice = (device, controlData, that) => new Promise((resolve, reject) => {
     const VID = device.vendorId;
@@ -71,6 +71,7 @@ const configureDevice = (device, controlData, that) => new Promise((resolve, rej
 });
 
 (() => {
+    // eslint-disable-next-line
     serial.getPorts = () => navigator.usb.getDevices().then(devices => map(device => new serial.Port(device)));
     serial.requestPort = () => {
         const filters = [
@@ -112,6 +113,6 @@ const configureDevice = (device, controlData, that) => new Promise((resolve, rej
     };
 })();
 
-module.exports = {
+/*module.exports =*/ export {
     serial,
 };

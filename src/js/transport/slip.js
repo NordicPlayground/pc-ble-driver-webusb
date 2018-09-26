@@ -1,4 +1,4 @@
-const { NRF_SUCCESS, NRF_ERROR_INVALID_DATA } = require('../sd_rpc_types');
+import { NRF_SUCCESS, NRF_ERROR_INVALID_DATA } from '../sd_rpc_types';
 
 const SLIP_END = 0xC0;
 const SLIP_ESC = 0xDB;
@@ -44,7 +44,7 @@ function slipDecode(packet, outPacket) {
     return NRF_SUCCESS;
 }
 
-module.exports = {
+/*module.exports =*/ export {
     slipEncode,
     slipDecode,
 };

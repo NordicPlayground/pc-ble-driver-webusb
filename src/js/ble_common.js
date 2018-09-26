@@ -1,4 +1,5 @@
-const { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_app_status_t } = require('./sd_rpc_types');
+/*global Module */
+import { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_app_status_t } from './sd_rpc_types';
 
 const SER_HAL_TRANSPORT_MAX_PKT_SIZE = 384;
 
@@ -80,6 +81,6 @@ async function encode_decode(adapter, encodeFunction, decodeFunction) {
     return resultCodeValue;
 }
 
-module.exports = {
+/*module.exports =*/ export {
     encode_decode,
 };

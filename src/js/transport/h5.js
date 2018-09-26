@@ -1,4 +1,4 @@
-const { NRF_SUCCESS, NRF_ERROR_INVALID_DATA } = require('../sd_rpc_types');
+import { NRF_SUCCESS, NRF_ERROR_INVALID_DATA } from '../sd_rpc_types';
 
 const control_pkt_type = Object.freeze({
     CONTROL_PKT_RESET: 0,
@@ -140,7 +140,7 @@ function h5Decode(slipPayload, h5Payload, ref, _dataIntegrity, _payloadLength, _
     return NRF_SUCCESS;
 }
 
-module.exports = {
+/*module.exports =*/ export {
     control_pkt_type,
     h5_pkt_type_t,
     add_h5_header,
