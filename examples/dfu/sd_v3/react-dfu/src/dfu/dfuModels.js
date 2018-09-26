@@ -36,7 +36,7 @@
 
 'use strict';
 
-const crc = require('crc');
+const crc = require('../crc/index');
 const createError = require('./dfuConstants').createError;
 const ErrorCode = require('./dfuConstants').ErrorCode;
 const splitArray = require('../util/arrayUtil').splitArray;

@@ -35,7 +35,7 @@
  */
 
 'use strict';
-const crc = require('crc');
+const crc = require('../../crc/index');
 const ErrorCode = require('../dfuConstants').ErrorCode;
 const createError = require('../dfuConstants').createError;
 
