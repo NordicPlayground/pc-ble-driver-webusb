@@ -1,5 +1,7 @@
-const { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_log_severity_t } = require('../sd_rpc_types');
-const { emscriptenBindings } = require('../bindings/emscripten');
+/*global Module */
+import EventEmitter from 'events';
+import { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_log_severity_t } from '../sd_rpc_types';
+import { emscriptenBindings } from '../bindings/emscripten';
 
 const serialization_pkt_type_t = Object.freeze({
     SERIALIZATION_COMMAND: 0,
@@ -9,9 +11,10 @@ const serialization_pkt_type_t = Object.freeze({
 
 let nextId = 0;
 
-class SerializationTransport {
+class SerializationTransport extends EventEmitter {
 
     constructor(dataLinkLayer, responseTimeout) {
+        super();
         this.statusCallback = null;
         this.eventCallback = null;
         this.logCallback = null;
@@ -27,7 +30,7 @@ class SerializationTransport {
         this.responseTimeout = responseTimeout;
         this.boundEventHandler = this.eventHandler.bind(this);
 
-        addEventListener('eventDataReadyEvent', this.boundEventHandler);
+        this.on('eventDataReadyEvent', this.boundEventHandler);
 
         this.eventQueue = [];
         this.ID = nextId++;
@@ -48,7 +51,7 @@ class SerializationTransport {
         return NRF_SUCCESS;
     }
     async close() {
-        removeEventListener('eventDataReadyEvent', this.boundEventHandler);
+        this.removeListener('eventDataReadyEvent', this.boundEventHandler);
         return this.nextTransportLayer.close();
     }
 
@@ -98,23 +101,21 @@ class SerializationTransport {
         const sendTimeoutFunc = () => {
             this.didTimeout = true;
             if (!this.rspReceived) {
-                const dataReadyEvent = new CustomEvent('dataReadyEvent', { detail: { status: NRF_ERROR_INTERNAL } });
-                dispatchEvent(dataReadyEvent);
+                this.emit('dataReadyEvent', { detail: { status: NRF_ERROR_INTERNAL } })
             }
         };
         const rspPromise = new Promise(resolve => {
             const dataRcvdResolve = evt => {
-                removeEventListener('dataReadyEvent', dataRcvdResolve);
+                this.removeListener('dataReadyEvent', dataRcvdResolve);
                 resolve(evt.detail.status);
             };
-            addEventListener('dataReadyEvent', dataRcvdResolve);
+            this.on('dataReadyEvent', dataRcvdResolve);
         });
 
         this.timeoutEvent = setTimeout(sendTimeoutFunc, this.responseTimeout);
         const errCode = await this.nextTransportLayer.send(commandBuffer);
         if (errCode !== NRF_SUCCESS) {
-            const dataReadyEvent = new CustomEvent('dataReadyEvent', { detail: { status: errCode } });
-            dispatchEvent(dataReadyEvent);
+            this.emit('dataReadyEvent', { detail: { status: errCode } })
         }
 
         return rspPromise;
@@ -131,22 +132,18 @@ class SerializationTransport {
             Module.setValue(this.responseLength, length - 1, 'i32');
             this.rspReceived = true;
             clearTimeout(this.timeoutEvent);
-
-            const dataReadyEvent = new CustomEvent('dataReadyEvent', { detail: { status:NRF_SUCCESS } });
-            dispatchEvent(dataReadyEvent);
+            this.emit('dataReadyEvent', { detail: { status:NRF_SUCCESS } })
         } else if (eventType === serialization_pkt_type_t.SERIALIZATION_EVENT) {
             const eventData = new Uint8Array(data.slice(1));
             this.eventQueue.push(eventData);
             clearTimeout(this.timeoutEvent);
-
-            const dataReadyEvent = new CustomEvent('eventDataReadyEvent', { detail: { status:NRF_SUCCESS } });
-            dispatchEvent(dataReadyEvent);
+            this.emit('eventDataReadyEvent', { detail: { status:NRF_SUCCESS } })
         } else {
             this.logCallback(sd_rpc_log_severity_t.SD_RPC_LOG_WARNING, 'Unknown Nordic Semiconductor vendor specific packet received');
         }
     }
 }
 
-module.exports = {
+/*module.exports =*/ export {
     SerializationTransport,
 };

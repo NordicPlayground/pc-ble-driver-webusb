@@ -1,4 +1,4 @@
-class ExitCriterias {
+export class ExitCriterias {
     constructor() {
         this.ioResourceError = false;
         this.close = false;
@@ -10,7 +10,7 @@ class ExitCriterias {
     }
 }
 
-class StartExitCriterias extends ExitCriterias {
+export class StartExitCriterias extends ExitCriterias {
     constructor() {
         super();
         this.isOpened = false;
@@ -26,7 +26,7 @@ class StartExitCriterias extends ExitCriterias {
     }
 }
 
-class UninitializedExitCriterias extends ExitCriterias {
+export class UninitializedExitCriterias extends ExitCriterias {
     constructor() {
         super();
         this.syncSent = false;
@@ -44,7 +44,7 @@ class UninitializedExitCriterias extends ExitCriterias {
     }
 }
 
-class InitializedExitCriterias extends ExitCriterias {
+export class InitializedExitCriterias extends ExitCriterias {
     constructor() {
         super();
         this.syncConfigSent = false;
@@ -62,7 +62,7 @@ class InitializedExitCriterias extends ExitCriterias {
     }
 }
 
-class ActiveExitCriterias extends ExitCriterias {
+export class ActiveExitCriterias extends ExitCriterias {
     constructor() {
         super();
         this.irrecoverableSyncError = false;
@@ -80,7 +80,7 @@ class ActiveExitCriterias extends ExitCriterias {
     }
 }
 
-class ResetExitCriterias extends ExitCriterias {
+export class ResetExitCriterias extends ExitCriterias {
     constructor() {
         super();
         this.resetSent = false;
@@ -95,7 +95,7 @@ class ResetExitCriterias extends ExitCriterias {
         this.resetSent = false;
     }
 }
-
+/*
 module.exports = {
     StartExitCriterias,
     UninitializedExitCriterias,
@@ -103,3 +103,4 @@ module.exports = {
     ActiveExitCriterias,
     ResetExitCriterias,
 };
+*/

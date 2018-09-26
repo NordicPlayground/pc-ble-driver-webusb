@@ -1,6 +1,6 @@
-const { Transport } = require('./transport');
-const { serial } = require('./serial');
-const { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_log_severity_t, sd_rpc_app_status_t } = require('../sd_rpc_types');
+import { Transport } from './transport';
+import { serial } from './serial';
+import { NRF_SUCCESS, NRF_ERROR_INTERNAL, sd_rpc_log_severity_t, sd_rpc_app_status_t } from '../sd_rpc_types';
 
 class WebusbInterface extends Transport {
 
@@ -67,6 +67,6 @@ class WebusbInterface extends Transport {
         }
     }
 }
-module.exports = {
+/*module.exports =*/ export {
     WebusbInterface,
 };

@@ -1,8 +1,10 @@
-const { NRF_SUCCESS, NRF_ERROR_TIMEOUT, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_STATE, sd_rpc_app_status_t, sd_rpc_log_severity_t } = require('../sd_rpc_types');
-const { Transport } = require('./transport');
-const { h5Encode, h5Decode, h5_pkt_type_t, control_pkt_type } = require('./h5');
-const { slipEncode, slipDecode } = require('./slip');
-const { StartExitCriterias, UninitializedExitCriterias, InitializedExitCriterias, ActiveExitCriterias, ResetExitCriterias } = require('./h5_transport_exit_criterias');
+import EventEmitter from 'events';
+
+import { NRF_SUCCESS, NRF_ERROR_TIMEOUT, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_STATE, sd_rpc_app_status_t, sd_rpc_log_severity_t } from '../sd_rpc_types';
+import { Transport } from './transport';
+import { h5Encode, h5Decode, h5_pkt_type_t, control_pkt_type } from './h5';
+import { slipEncode, slipDecode } from './slip';
+import { StartExitCriterias, UninitializedExitCriterias, InitializedExitCriterias, ActiveExitCriterias, ResetExitCriterias } from './h5_transport_exit_criterias';
 
 const h5_state = Object.freeze({
     STATE_START: 0,
@@ -37,7 +39,7 @@ pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_RESPONSE] = new Uint8Array([syncRs
 pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_CONFIG] = new Uint8Array([syncConfigFirstByte, syncConfigSecondByte, syncConfigField]);
 pkt_pattern[control_pkt_type.CONTROL_PKT_SYNC_CONFIG_RESPONSE] = new Uint8Array([syncConfigRspFirstByte, syncConfigRspSecondByte, syncConfigField]);
 
-class H5Transport extends Transport {
+export class H5Transport extends Transport {
     constructor(nextTransportLayer, retransmissionInterval) {
         super();
         this.seqNum = 0;
@@ -123,7 +125,7 @@ class H5Transport extends Transport {
 
             const packetAckFunc = () => {
                 if (seqNumBefore !== this.seqNum) {
-                    removeEventListener('packetAckWait', packetAckFunc);
+                    this.removeListener('packetAckWait', packetAckFunc);
                     clearInterval(timeout);
                     resolve(NRF_SUCCESS);
                 }
@@ -132,7 +134,7 @@ class H5Transport extends Transport {
             const timeoutFunc = () => {
                 remainingRetransmissions -= 1;
                 if (remainingRetransmissions < 0) {
-                    removeEventListener('packetAckWait', packetAckFunc);
+                    this.removeListener('packetAckWait', packetAckFunc);
                     clearInterval(timeout);
                     resolve(NRF_ERROR_TIMEOUT);
                 }
@@ -141,8 +143,7 @@ class H5Transport extends Transport {
             };
 
             timeout = setInterval(timeoutFunc, this.retransmissionInterval);
-            addEventListener('packetAckWait', packetAckFunc);
-
+            this.on('packetAckWait', packetAckFunc);
             remainingRetransmissions -= 1;
             sendNextPacket();
         });
@@ -303,7 +304,7 @@ class H5Transport extends Transport {
             if (ref.ack_num === ((this.seqNum + 1) & 0x07)) {
                 // Received a packet with valid ack_num, inform threads that wait the command is received on the other end
                 this.incrementSeqNum();
-                dispatchEvent(this.packetAckEvent);
+                this.emit('packetAckWait');
             } else if (ref.ack_num === this.seqNum) {
                 // Discard packet, we assume that we have received a reply from a previous packet
             } else {
@@ -320,13 +321,13 @@ class H5Transport extends Transport {
             clearInterval(this.stateUpdateCallback);
         }
         this.currentState = newState;
-        dispatchEvent(this.stateChangedEvent);
+        this.emit('stateChanged');
     }
 
     waitForState(state, timeoutMs) {
         return new Promise(resolve => {
             const timeoutFunc = () => {
-                removeEventListener('stateChanged', stateChangedFunc);
+                this.removeListener('stateChanged', stateChangedFunc);
                 if (this.currentState !== state) {
                     resolve(false);
                 }
@@ -334,12 +335,12 @@ class H5Transport extends Transport {
 
             const stateChangedFunc = () => {
                 if (this.currentState === state) {
-                    removeEventListener('stateChanged', stateChangedFunc);
+                    this.removeListener('stateChanged', stateChangedFunc);
                     resolve(true);
                 }
             };
             const timeout = setTimeout(timeoutFunc, timeoutMs);
-            addEventListener('stateChanged', stateChangedFunc);
+            this.on('stateChanged', stateChangedFunc);
         });
     }
 
@@ -541,12 +542,12 @@ class H5Transport extends Transport {
     }
 
     startStateMachine() {
-        addEventListener('stateChanged', this.boundStateMachineWorker);
-        dispatchEvent(this.stateChangedEvent);
+        this.on('stateChanged', this.boundStateMachineWorker);
+        this.emit('stateChanged');
     }
 
     stopStateMachine() {
-        removeEventListener('stateChanged', this.boundStateMachineWorker);
+        this.removeListener('stateChanged', this.boundStateMachineWorker);
     }
 
     stateMachineWorker() {
@@ -564,7 +565,7 @@ class H5Transport extends Transport {
     }
 }
 
-
+/*
 module.exports = {
     H5Transport,
-};
+};*/

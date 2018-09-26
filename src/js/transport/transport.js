@@ -1,6 +1,7 @@
-const { NRF_SUCCESS } = require('../sd_rpc_types');
+import EventEmitter from 'events';
+import { NRF_SUCCESS } from '../sd_rpc_types';
 
-class Transport {
+class Transport extends EventEmitter {
     open(statusCallback, dataCallback, logCallback) {
         this.statusCallback = statusCallback;
         this.dataCallback = dataCallback;
@@ -9,6 +10,6 @@ class Transport {
         return NRF_SUCCESS;
     }
 }
-module.exports = {
+/*module.exports =*/ export {
     Transport,
 };

@@ -1,19 +1,20 @@
-const { encode_decode } = require('../ble_common');
-const { emscriptenBindings } = require('../bindings/emscripten');
-const { emscriptenAllocPTP, emscriptenFreePTP } = require('./common');
-const { NRF_SD_BLE_API_VERSION } = require('../bindings/version');
+/*global Module */
+import { encode_decode } from '../ble_common';
+import { emscriptenBindings } from '../bindings/emscripten';
+import { emscriptenAllocPTP, emscriptenFreePTP } from './common';
+import { NRF_SD_BLE_API_VERSION } from '../bindings/version';
 
-module.exports.sd_ble_gatts_service_add = async (adapter, type, p_uuid, p_handle) => {
+export const sd_ble_gatts_service_add = async (adapter, type, p_uuid, p_handle) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_service_add_req_enc(type, p_uuid._getInternal(), p_handle, buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_service_add_rsp_dec(buffer, length, p_handle, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_include_add = async (adapter, service_handle, inc_srvc_handle, p_include_handle) => {
+export const sd_ble_gatts_include_add = async (adapter, service_handle, inc_srvc_handle, p_include_handle) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_include_add_req_enc(service_handle, inc_srvc_handle, p_include_handle, buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_include_add_rsp_dec(buffer, length, p_include_handle, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_characteristic_add = async (adapter, service_handle, p_char_md, p_attr_char_value, p_handles) => {
+export const sd_ble_gatts_characteristic_add = async (adapter, service_handle, p_char_md, p_attr_char_value, p_handles) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_characteristic_add_req_enc(service_handle, p_char_md._getInternal(), p_attr_char_value._getInternal(), p_handles._getInternal(), buffer, length);
     const decode_function = (buffer, length, result) => {
         const value_handle = emscriptenAllocPTP(p_handles.value_handle.GETADDR());
@@ -23,22 +24,22 @@ module.exports.sd_ble_gatts_characteristic_add = async (adapter, service_handle,
     };
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_descriptor_add = async (adapter, char_handle, p_attr, p_handle) => {
+export const sd_ble_gatts_descriptor_add = async (adapter, char_handle, p_attr, p_handle) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_descriptor_add_req_enc(char_handle, p_attr._getInternal(), p_handle, buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_descriptor_add_rsp_dec(buffer, length, p_handle, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_value_set = async (adapter, conn_handle, handle, p_value) => {
+export const sd_ble_gatts_value_set = async (adapter, conn_handle, handle, p_value) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_value_set_req_enc(conn_handle, handle, p_value._getInternal(), buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_value_set_rsp_dec(buffer, length, p_value._getInternal(), result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_value_get = async (adapter, conn_handle, handle, p_value) => {
+export const sd_ble_gatts_value_get = async (adapter, conn_handle, handle, p_value) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_value_get_req_enc(conn_handle, handle, p_value._getInternal(), buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_value_get_rsp_dec(buffer, length, p_value._getInternal(), result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_hvx = async (adapter, conn_handle, p_hvx_params) => {
+export const sd_ble_gatts_hvx = async (adapter, conn_handle, p_hvx_params) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_hvx_req_enc(conn_handle, p_hvx_params._getInternal(), buffer, length);
     const decode_function = (buffer, length, result) => {
         const p_p_hvx_params = emscriptenAllocPTP(p_hvx_params.p_len.GETADDR());
@@ -48,22 +49,22 @@ module.exports.sd_ble_gatts_hvx = async (adapter, conn_handle, p_hvx_params) => 
     };
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_service_changed = async (adapter, conn_handle, start_handle, end_handle) => {
+export const sd_ble_gatts_service_changed = async (adapter, conn_handle, start_handle, end_handle) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_service_changed_req_enc(conn_handle, start_handle, end_handle, buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_service_changed_rsp_dec(buffer, length, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_rw_authorize_reply = async (adapter, conn_handle, p_rw_authorize_reply_params) => {
+export const sd_ble_gatts_rw_authorize_reply = async (adapter, conn_handle, p_rw_authorize_reply_params) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_rw_authorize_reply_req_enc(conn_handle, p_rw_authorize_reply_params._getInternal(), buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_rw_authorize_reply_rsp_dec(buffer, length, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_sys_attr_set = async (adapter, conn_handle, p_sys_attr_data, flags) => {
+export const sd_ble_gatts_sys_attr_set = async (adapter, conn_handle, p_sys_attr_data, flags) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_sys_attr_set_req_enc(conn_handle, p_sys_attr_data, flags, buffer, length);
     const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_sys_attr_set_rsp_dec(buffer, length, result);
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_sys_attr_get = async (adapter, conn_handle, p_sys_attr_data, p_len, flags) => {
+export const sd_ble_gatts_sys_attr_get = async (adapter, conn_handle, p_sys_attr_data, p_len, flags) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_sys_attr_get_req_enc(conn_handle, p_sys_attr_data, p_len, flags, buffer, length);
 
     let decode_function;
@@ -81,7 +82,7 @@ module.exports.sd_ble_gatts_sys_attr_get = async (adapter, conn_handle, p_sys_at
     }
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_initial_user_handle_get = async (adapter, p_handle) => {
+export const sd_ble_gatts_initial_user_handle_get = async (adapter, p_handle) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_initial_user_handle_get_req_enc(p_handle, buffer, length);
     const decode_function = (buffer, length, result) => {
         const p_p_handle = emscriptenAllocPTP(p_handle);
@@ -91,7 +92,7 @@ module.exports.sd_ble_gatts_initial_user_handle_get = async (adapter, p_handle) 
     };
     return encode_decode(adapter, encode_function, decode_function);
 };
-module.exports.sd_ble_gatts_attr_get = async (adapter, handle, p_uuid, p_md) => {
+export const sd_ble_gatts_attr_get = async (adapter, handle, p_uuid, p_md) => {
     const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_attr_get_req_enc(handle, p_uuid._getInternal(), p_md._getInternal(), buffer, length);
     const decode_function = (buffer, length, result) => {
         const p_p_uuid = emscriptenAllocPTP(p_uuid._getInternal());
@@ -105,7 +106,7 @@ module.exports.sd_ble_gatts_attr_get = async (adapter, handle, p_uuid, p_md) => 
 };
 //let sd_ble_gatts_exchange_mtu_reply;
 if (NRF_SD_BLE_API_VERSION >= 3) {
-    module.exports.sd_ble_gatts_exchange_mtu_reply = async (adapter, conn_handle, server_rx_mtu) => {
+    export const sd_ble_gatts_exchange_mtu_reply = async (adapter, conn_handle, server_rx_mtu) => {
         const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_exchange_mtu_reply_req_enc(conn_handle, server_rx_mtu, buffer, length);
         const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_exchange_mtu_reply_rsp_dec(buffer, length, result);
         return encode_decode(adapter, encode_function, decode_function);
