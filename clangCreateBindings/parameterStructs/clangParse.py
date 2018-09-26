@@ -92,7 +92,7 @@ def setup(version, s_ver):
 
     sdk_root = pc_ble_drive_root+"/src/sd_api_v{}/sdk".format(version)
     source_files_to_parse_headers = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
-    source_files_to_parse_serializers = os.listdir("{}/components/serialization/application/codecs/s132/serializers".format(sdk_root))
+    source_files_to_parse_serializers = os.listdir("{}/components/serialization/application/codecs/{}/serializers".format(sdk_root, s_ver))
     headers = []
 
     compArgs    = '-x c++ --std=c++11 -DNRF_SD_BLE_API_VERSION={ver}'.format(ver=version).split()
@@ -121,6 +121,6 @@ def setup(version, s_ver):
             parse_files.append((filename, file_root))
     for filename in source_files_to_parse_serializers:
         if filename.endswith(".h") and "ble_" in filename:
-            parse_files.append((filename, "{}/components/serialization/application/codecs/s132/serializers/".format(sdk_root)))
+            parse_files.append((filename, "{}/components/serialization/application/codecs/{}/serializers/".format(sdk_root, s_ver)))
 
     return pc_ble_drive_webusb_root, headers
