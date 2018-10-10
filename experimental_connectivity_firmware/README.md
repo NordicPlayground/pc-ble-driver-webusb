@@ -8,3 +8,9 @@ A few modifications are done to the firmware. Interface 1 (CDC communication) an
 4. Windows will request a platform compatibility descriptor that instructs it to load the WinUSB driver for interface 0 (dfu trigger), 3(CDC communication) and 4(data transfer).
 
 The WebUSB application can now use the nRF dongle without problems, given that interfaces 3 and 4 are used instead of 1 and 2 for communications.
+
+## Installation
+
+Use [pc-nrfutil](https://github.com/NordicSemiconductor/pc-nrfutil) with ```connectivity_webusb_experimental.zip```.
+
+```nrfutil dfu usb_serial -pkg connectivity_webusb_experimental.zip -p COM{xx}```
