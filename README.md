@@ -99,3 +99,7 @@ In pc-ble-driver-webusb we have to do this:
 
 This will generate bindings for SD versions 2 and 5 and compile them together with BLE codecs. Checkout the correct branch for the pc-ble-driver that matches the specified SD versions if needed.
 Compiled binaries in "build/v{n}/". Both pc_ble_driver_sd_api_v{n}.js and the pc_ble_driver_sd_api_v{n}.wasm is required. The .js file must be included in the .html file of your project, and the wasm file will be fetched automatically.
+
+# Connectivity Firmware for USB device
+Modified connectivity firmware is needed. See [experimental webusb connectivity firmware](https://github.com/mathiasap/pc-ble-driver-webusb/tree/experimental_firmware/experimental_connectivity_firmware)
+
