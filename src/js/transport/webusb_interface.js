@@ -43,6 +43,25 @@ class WebusbInterface extends Transport {
         });
     }
 
+    enterBootloader() {
+        return new Promise(resolve => {
+            if(this.port) {
+                resolve();
+                return;
+            }
+            serial.requestPort().then(selectedPort => {
+                this.port = selectedPort;
+                this.port.triggerIface = 0;
+                resolve();
+            })
+            .catch(error => {
+                this.log(`Could not connect to webusb: ${error}`);
+            });
+        })
+        .then(()=> {this.port.enterBootloader()})
+        .catch(err => this.log(err));
+    }
+
     async close() {
         return this.port.disconnect();
     }

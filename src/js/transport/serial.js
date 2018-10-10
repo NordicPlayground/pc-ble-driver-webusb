@@ -112,6 +112,34 @@ const configureDevice = (device, controlData, that) => new Promise((resolve, rej
     serial.Port.prototype.send = function (data) {
         this.device_.transferOut(this.transferOut, data);
     };
+
+    serial.Port.prototype.enterBootloader = function() {
+        if(this.triggerIface === undefined) {
+            throw("No trigger interface available");
+        }
+
+        console.log("Entering bootloader..");
+        const DFU_DETACH_REQUEST = 0x00;
+        const detachBuf = Buffer.from('0');
+        return new Promise(resolve => {
+            if(this.device_.opened) {
+                resolve();
+                return;
+            }
+            this.device_.open()
+            .then(resolve);
+        })
+        .then(() => this.device_.claimInterface(this.triggerIface))
+        .then(() => this.device_.controlTransferOut({
+            requestType: 'class',
+            recipient: 'interface',
+            request: DFU_DETACH_REQUEST,
+            value: 0x00,
+            index: this.triggerIface }, detachBuf))
+        .catch((error) => {
+            throw(error);
+        });
+    }
 })();
 
 export {
