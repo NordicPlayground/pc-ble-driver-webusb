@@ -89,6 +89,8 @@ In pc-ble-driver-webusb we have to do this:
   }
 ```
 
+The adapter_internal class implements an event handler, but does not support all types of possible events. To add custom event handling logic, subclass adapter_interal and override eventHandler with your own.
+
 # Generate bindings and compile codecs
 
 1. Download and install [Emscripten](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
