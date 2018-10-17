@@ -20,6 +20,8 @@ def filePointers():
 
 parsedStructs = set()
 
+typedefArrays = {"ble_gap_ch_mask_t": "uint8_t"}
+
 def createStructNode(structParent):
     global parsedStructs
     if structParent.spelling in parsedStructs:
@@ -41,8 +43,11 @@ def createStructNode(structParent):
             isPointer = prev.type.kind == clang.cindex.TypeKind.POINTER
             if isPointer and "**" in prev.type.spelling: # Hack to check if pointer is a pointer to another pointer
                 isPointer = 2
-            isBitfield = prev.is_bitfield()
+            if dataType in typedefArrays:
+                isArray = True
+                dataType = typedefArrays[dataType]
 
+            isBitfield = prev.is_bitfield()
             childStruct = StructChild(structParent.spelling, dataType, dataName, isPointer, isArray, isBitfield)
             #print(dir(prev))
             #print(prev.type.spelling)
@@ -79,7 +84,7 @@ def parseAll(parsedStructs):
                 if structNode is not None:
                     parsedStructs[structNode.dataType] = structNode
 
-def setup(version, s_ver):
+def setup(version, s_ver, sd_dir_name):
     global parse_files
     global compArgs
     global headers
@@ -91,7 +96,7 @@ def setup(version, s_ver):
     pc_ble_drive_root = pc_ble_drive_webusb_root + "/pc-ble-driver"
 
     sdk_root = pc_ble_drive_root+"/src/sd_api_v{}/sdk".format(version)
-    source_files_to_parse_headers = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
+    source_files_to_parse_headers = os.listdir("{}/components/softdevice/{}/headers".format(sdk_root, sd_dir_name))
     source_files_to_parse_serializers = os.listdir("{}/components/serialization/application/codecs/{}/serializers".format(sdk_root, s_ver))
     headers = []
 
@@ -106,9 +111,9 @@ def setup(version, s_ver):
     sdk_root+"/components/libraries/util",
     sdk_root+"/components/serialization/common",
     sdk_root+"/components/serialization/common/struct_ser/{s_ver}".format(s_ver=s_ver),
-    sdk_root+"/components/softdevice/s132/headers"]
+    sdk_root+"/components/softdevice/{}/headers".format(sd_dir_name)]
 
-    file_root = sdk_root+"/components/softdevice/s132/headers/"
+    file_root = sdk_root+"/components/softdevice/{}/headers/".format(sd_dir_name)
 
     pc_ble_driver_includes = [ '-I' + inc for inc in include_dir ]
     pc_ble_driver_cppincludes = [ '-I' + inc for inc in cpp_dir ]

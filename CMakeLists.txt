@@ -64,8 +64,10 @@ foreach(SD_API_VER ${SD_API_VERS})
         pc-ble-driver/src/${SD_API_VER_L}/sdk/components/serialization/common
         pc-ble-driver/src/${SD_API_VER_L}/sdk/components/serialization/common/struct_ser/s130
         pc-ble-driver/src/${SD_API_VER_L}/sdk/components/serialization/common/struct_ser/s132
+        pc-ble-driver/src/${SD_API_VER_L}/sdk/components/serialization/common/struct_ser/s140
         pc-ble-driver/src/${SD_API_VER_L}/sdk/components/serialization/common/struct_ser/ble
         pc-ble-driver/src/${SD_API_VER_L}/sdk/components/softdevice/s132/headers
+        pc-ble-driver/src/${SD_API_VER_L}/sdk/components/softdevice/s140/headers
     )
     # Provide the NRF_SD_BLE_API_VERSION macro to each variant
     string(REGEX MATCH "[0-9]+$" _SD_API_VER_NUM "${SD_API_VER}")

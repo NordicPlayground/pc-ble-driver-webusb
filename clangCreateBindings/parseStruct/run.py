@@ -2,8 +2,8 @@ from clangCreateBindings.parseStruct.nodes import StructType, structs, recursive
 from clangCreateBindings.parseStruct.clangParse import filePointers, clangIsStruct, createStructNode, setup
 from clangCreateBindings.parseStruct.generateCode import generateCppEmscriptenFunctionBinding, generateJsEmscriptenFunctionBinding, writeCppFunctions, writeJsFunctions
 
-def build(version, s_ver):
-    pc_ble_drive_webusb_root = setup(version, s_ver)
+def build(version, s_ver, sd_dir_name):
+    pc_ble_drive_webusb_root = setup(version, s_ver, sd_dir_name)
     for tu in filePointers():
         for c in tu.cursor.walk_preorder():
             if(clangIsStruct(c.kind) and c.spelling.startswith("ble") and c.spelling.endswith("_t")):

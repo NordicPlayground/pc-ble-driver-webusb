@@ -53,7 +53,7 @@ def createStructNode(structParent):
                 return structNode
     return structNode
 
-def setup(version, s_ver):
+def setup(version, s_ver, sd_dir_name):
     global parse_files
     global file_root
     global compArgs
@@ -62,7 +62,7 @@ def setup(version, s_ver):
     pc_ble_drive_root = pc_ble_drive_webusb_root + "/pc-ble-driver"
 
     sdk_root = pc_ble_drive_root+"/src/sd_api_v{}/sdk".format(version)
-    source_files_to_parse = os.listdir("{}/components/softdevice/s132/headers".format(sdk_root))
+    source_files_to_parse = os.listdir("{}/components/softdevice/{}/headers".format(sdk_root, sd_dir_name))
 
 
     compArgs    = '-x c++ --std=c++11 -DNRF_SD_BLE_API_VERSION={ver}'.format(ver=version).split()
@@ -77,9 +77,9 @@ def setup(version, s_ver):
     sdk_root+"/components/libraries/util",
     sdk_root+"/components/serialization/common",
     sdk_root+"/components/serialization/common/struct_ser/{s_ver}".format(s_ver = s_ver),
-    sdk_root+"/components/softdevice/s132/headers"]
+    sdk_root+"/components/softdevice/{}/headers".format(sd_dir_name)]
 
-    file_root = sdk_root+"/components/softdevice/s132/headers/"
+    file_root = sdk_root+"/components/softdevice/{}/headers/".format(sd_dir_name)
 
     pc_ble_driver_includes = [ '-I' + inc for inc in include_dir ]
     pc_ble_driver_cppincludes = [ '-I' + inc for inc in cpp_dir ]

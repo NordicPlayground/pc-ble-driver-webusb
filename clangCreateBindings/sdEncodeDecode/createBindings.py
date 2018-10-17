@@ -27,7 +27,7 @@ def filePointers(file_root, args, parse_files):
     for filename in parse_files:
         yield idx.parse(file_root+filename, args=args)
 
-def build(version, s_ver):
+def build(version, s_ver, sd_dir_name, encodeDecodeIgnoreStructs):
     pc_ble_drive_webusb_root = os.getcwd()
     pc_ble_drive_root = pc_ble_drive_webusb_root + "/pc-ble-driver"
 
@@ -49,7 +49,7 @@ def build(version, s_ver):
     sdk_root+"/components/libraries/util",
     sdk_root+"/components/serialization/common",
     sdk_root+"/components/serialization/common/struct_ser/{s_ver}".format(s_ver = s_ver),
-    sdk_root+"/components/softdevice/s132/headers"]
+    sdk_root+"/components/softdevice/{}/headers".format(sd_dir_name)]
 
     file_root = sdk_root+"/components/serialization/application/codecs/{s_ver}/serializers/".format(s_ver = s_ver)
 
@@ -68,7 +68,7 @@ def build(version, s_ver):
 
     for tu in filePointers(file_root, compArgs, parse_files):
         for c in tu.cursor.walk_preorder():
-            if(c.kind == clang.cindex.CursorKind.FUNCTION_DECL and c.spelling.startswith("ble")):
+            if(c.kind == clang.cindex.CursorKind.FUNCTION_DECL and c.spelling.startswith("ble") and c.spelling not in encodeDecodeIgnoreStructs):
                 '''
                     Parsed node is a C function with a name that starts with "ble"
                 '''
