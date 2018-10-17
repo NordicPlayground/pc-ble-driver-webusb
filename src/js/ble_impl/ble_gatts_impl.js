@@ -104,9 +104,9 @@ export const sd_ble_gatts_attr_get = async (adapter, handle, p_uuid, p_md) => {
     };
     return encode_decode(adapter, encode_function, decode_function);
 };
-//let sd_ble_gatts_exchange_mtu_reply;
+export let sd_ble_gatts_exchange_mtu_reply;
 if (NRF_SD_BLE_API_VERSION >= 3) {
-    export const sd_ble_gatts_exchange_mtu_reply = async (adapter, conn_handle, server_rx_mtu) => {
+    sd_ble_gatts_exchange_mtu_reply = async (adapter, conn_handle, server_rx_mtu) => {
         const encode_function = (buffer, length) => emscriptenBindings.ble_gatts_exchange_mtu_reply_req_enc(conn_handle, server_rx_mtu, buffer, length);
         const decode_function = (buffer, length, result) => emscriptenBindings.ble_gatts_exchange_mtu_reply_rsp_dec(buffer, length, result);
         return encode_decode(adapter, encode_function, decode_function);
