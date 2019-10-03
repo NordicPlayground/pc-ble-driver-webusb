@@ -1,5 +1,7 @@
 # pc-ble-driver-webusb
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/NordicPlayground/pc-ble-driver-webusb.svg)](https://greenkeeper.io/)
+
 pc-ble-driver-webusb is designed to run in a web browser and communicate with devices using [WebUSB](https://wicg.github.io/webusb/). It interfaces with codecs from the [pc-ble-driver](https://github.com/NordicSemiconductor/pc-ble-driver) library by compiling them using the LLVM to Javascript compiler [Emscripten](https://github.com/kripken/emscripten/wiki).
 
 
